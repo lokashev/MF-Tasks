@@ -434,28 +434,45 @@
   }
 
   async function loadDataFromSupabase() {
-    if (_supabase) {
-      try {
-        const { data: eData } = await _supabase.from('employees').select('*').order('name');
-        if (eData) employeesList = eData;
+  if (_supabase) {
+    try {
+      const { data: eData } = await _supabase.from('employees').select('*').order('name');
+      if (eData) employeesList = eData;
 
-        const { data: pData } = await _supabase.from('active_periods').select('*').order('created_at', { ascending: false });
-        if (pData && pData.length > 0) {
-          allPeriods = pData;
-          activePeriod = allPeriods.find(p => p.is_active) || allPeriods[0];
-        }
+      // Безопасный запрос: получаем все периоды без вызова .single()
+      const { data: pData, error: pError } = await _supabase.from('active_periods').select('*').order('created_at', { ascending: false });
+      
+      if (pError) console.error('Ошибка загрузки планов:', pError);
 
-        const { data: sData } = await _supabase.from('sales_records').select('*');
-        if (sData) salesHistory = sData;
+      if (pData && pData.length > 0) {
+        allPeriods = pData;
+        // Находим активный период или берем последний созданный
+        activePeriod = allPeriods.find(p => p.is_active) || allPeriods[0];
+      } else {
+        activePeriod = null;
+      }
 
-        const { data: tData } = await _supabase.from('tasks').select('*');
-        if (tData) tasks = tData;
+      const { data: sData } = await _supabase.from('sales_records').select('*');
+      if (sData) salesHistory = sData;
 
+      const { data: tData } = await _supabase.from('tasks').select('*');
+      if (tData) tasks = tData;
+
+      if (currentUser) {
         const { data: prData } = await _supabase.from('user_task_progress').select('*').eq('user_id', currentUser.tab_number);
         userTaskProgress = {};
         (prData || []).forEach(p => { userTaskProgress[p.task_id] = p; });
-      } catch (e) { console.log('Supabase Sync failed, using local mode.'); }
+      }
+    } catch (e) { 
+      console.log('Supabase Sync failed:', e); 
     }
+  }
+
+  renderDashboard();
+  renderTasks();
+  renderProfileHistory();
+  if (currentUser && currentUser.isAdmin) renderAdminPanel();
+}
 
     renderDashboard();
     renderTasks();
