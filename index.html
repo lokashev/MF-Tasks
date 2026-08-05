@@ -301,8 +301,8 @@
 </div>
 
 <script>
-  // SUPABASE CONFIG (Вставьте сюда свои ключи, если хотите связать с БД)
-  const SUPABASE_URL = 'https://icuwdhqcdobevgmhlhod.supabase.co';
+  // SUPABASE CONFIG
+  const SUPABASE_URL = 'https://icuwdhqcdobevgmhlhod.supabase.co;
   const SUPABASE_ANON_KEY = 'sb_publishable_vmARBTTLeCypr0mNcLWJ_w_VSImIwoD';
   
   let _supabase = null;
@@ -354,23 +354,37 @@
   function getTodayStr() { return new Date().toISOString().split('T')[0]; }
   function getPastDateStr(daysAgo) { let d = new Date(); d.setDate(d.getDate() - daysAgo); return d.toISOString().split('T')[0]; }
 
-  async function login() {
-    const idInput = document.getElementById('login-id').value;
-    if (idInput.length !== 8) return alert('Табельный номер должен состоять ровно из 8 цифр!');
+  // AUTO LOGIN ON PAGE RELOAD
+  window.addEventListener('DOMContentLoaded', async () => {
+    const savedTab = localStorage.getItem('sales_app_tab_number');
+    if (savedTab) {
+      document.getElementById('login-id').value = savedTab;
+      await login(true); // true = silent login
+    }
+  });
 
-    // Fetch or check user
+  async function login(isAuto = false) {
+    const idInput = document.getElementById('login-id').value;
+    if (idInput.length !== 8) {
+      if (!isAuto) alert('Табельный номер должен состоять ровно из 8 цифр!');
+      return;
+    }
+
     let emp = employeesList.find(e => e.tab_number === idInput);
 
     if (_supabase) {
-      const { data } = await _supabase.from('employees').select('*').eq('tab_number', idInput).single();
-      if (data) emp = data;
+      try {
+        const { data } = await _supabase.from('employees').select('*').eq('tab_number', idInput).single();
+        if (data) emp = data;
+      } catch(e) {}
     }
 
     if (!emp) {
       if (idInput === ADMIN_ID) {
         emp = { tab_number: ADMIN_ID, name: 'Администратор', role: 'admin' };
       } else {
-        alert('Сотрудник с таким табельным номером не найден в системе!');
+        if (!isAuto) alert('Сотрудник с таким табельным номером не найден в системе!');
+        localStorage.removeItem('sales_app_tab_number');
         return;
       }
     }
@@ -381,6 +395,9 @@
       role: emp.role,
       isAdmin: emp.role === 'admin' || emp.tab_number === ADMIN_ID
     };
+
+    // Save session in local storage
+    localStorage.setItem('sales_app_tab_number', currentUser.tab_number);
 
     document.getElementById('login-screen').style.display = 'none';
     document.getElementById('app').style.display = 'flex';
@@ -401,6 +418,7 @@
   }
 
   function logout() {
+    localStorage.removeItem('sales_app_tab_number');
     currentUser = null;
     document.getElementById('app').style.display = 'none';
     document.getElementById('login-screen').style.display = 'flex';
@@ -442,7 +460,7 @@
     renderDashboard();
     renderTasks();
     renderProfileHistory();
-    if (currentUser.isAdmin) renderAdminPanel();
+    if (currentUser && currentUser.isAdmin) renderAdminPanel();
   }
 
   function getPeriodDetails() {
@@ -622,7 +640,6 @@
 
   // ADMIN PANEL RENDERING
   function renderAdminPanel() {
-    // 1. Employees List
     const empContainer = document.getElementById('admin-employees-list');
     empContainer.innerHTML = '';
     employeesList.forEach(emp => {
@@ -642,7 +659,6 @@
       `;
     });
 
-    // 2. Periods List
     const periodsContainer = document.getElementById('admin-periods-list');
     periodsContainer.innerHTML = '';
     allPeriods.forEach(p => {
@@ -664,7 +680,6 @@
       `;
     });
 
-    // 3. Tasks List
     const tasksContainer = document.getElementById('admin-tasks-monitor');
     tasksContainer.innerHTML = '';
     tasks.forEach(t => {
@@ -765,34 +780,52 @@
   }
 
   async function savePeriodAndPlans() {
-    const periodId = document.getElementById('editing-period-id').value;
-    const title = document.getElementById('edit-period-title').value;
-    const start = document.getElementById('edit-period-start').value;
-    const end = document.getElementById('edit-period-end').value;
+    try {
+      const periodId = document.getElementById('editing-period-id').value;
+      const title = document.getElementById('edit-period-title').value;
+      const start = document.getElementById('edit-period-start').value;
+      const end = document.getElementById('edit-period-end').value;
 
-    let plansObj = {};
-    Object.keys(metricLabels).forEach(key => {
-      plansObj[key] = parseFloat(document.getElementById(`edit-plan-${key}`).value) || 0;
-    });
-
-    const payload = { title, start_date: start, end_date: end, plans: plansObj };
-
-    if (_supabase) {
-      if (periodId) await _supabase.from('active_periods').update(payload).eq('id', periodId);
-      else { payload.is_active = false; await _supabase.from('active_periods').insert([payload]); }
-    } else {
-      if (periodId) {
-        let idx = allPeriods.findIndex(p => p.id == periodId);
-        if (idx !== -1) allPeriods[idx] = { ...allPeriods[idx], ...payload };
-      } else {
-        payload.id = Date.now();
-        payload.is_active = false;
-        allPeriods.push(payload);
+      if (!start || !end) {
+        alert('Укажите даты начала и окончания периода!');
+        return;
       }
-    }
 
-    closeModal('modal-period');
-    await loadDataFromSupabase();
+      let plansObj = {};
+      Object.keys(metricLabels).forEach(key => {
+        const el = document.getElementById(`edit-plan-${key}`);
+        plansObj[key] = el ? (parseFloat(el.value) || 0) : 0;
+      });
+
+      const payload = { title: title || 'Период продаж', start_date: start, end_date: end, plans: plansObj };
+
+      if (_supabase) {
+        if (periodId) {
+          const { error } = await _supabase.from('active_periods').update(payload).eq('id', periodId);
+          if (error) throw error;
+        } else {
+          payload.is_active = false;
+          const { error } = await _supabase.from('active_periods').insert([payload]);
+          if (error) throw error;
+        }
+      } else {
+        if (periodId) {
+          let idx = allPeriods.findIndex(p => p.id == periodId);
+          if (idx !== -1) allPeriods[idx] = { ...allPeriods[idx], ...payload };
+        } else {
+          payload.id = Date.now();
+          payload.is_active = false;
+          allPeriods.push(payload);
+        }
+      }
+
+      closeModal('modal-period');
+      alert('План успешно сохранен!');
+      await loadDataFromSupabase();
+    } catch (err) {
+      console.error('Save Period Error:', err);
+      alert('Ошибка при сохранении плана: ' + (err.message || err));
+    }
   }
 
   async function setActivePeriod(periodId) {
