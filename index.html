@@ -51,16 +51,16 @@
     .input-group label { display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 6px; }
     input, select { width: 100%; padding: 12px 16px; background: rgba(15, 23, 42, 0.6); border: 1px solid var(--card-border); border-radius: 12px; color: #fff; font-size: 0.95rem; outline: none; }
     
-    .btn { width: 100%; padding: 14px; border: none; border-radius: 12px; background: var(--primary); color: #fff; font-weight: 600; font-size: 0.95rem; cursor: pointer; }
+    .btn { width: 100%; padding: 14px; border: none; border-radius: 12px; background: var(--primary); color: #fff; font-weight: 600; font-size: 0.95rem; cursor: pointer; transition: background 0.2s; }
     .btn:hover { background: var(--primary-hover); }
     .btn-secondary { background: rgba(255, 255, 255, 0.1); color: #fff; margin-top: 8px; }
     .btn-danger-outline { background: transparent; border: 1px solid var(--danger); color: #f87171; }
-    .btn-small { padding: 6px 10px; font-size: 0.75rem; border-radius: 8px; width: auto; border: 1px solid var(--card-border); }
+    .btn-small { padding: 6px 12px; font-size: 0.75rem; border-radius: 8px; width: auto; border: 1px solid var(--card-border); }
 
     .card { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 16px; padding: 16px; margin-bottom: 16px; backdrop-filter: blur(10px); }
-    .card-title { font-size: 0.9rem; font-weight: 600; color: var(--text-muted); margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
+    .card-title { font-size: 1rem; font-weight: 700; color: #fff; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
 
-    /* Admin Action Cards (Plans & Employees) */
+    /* Admin Action Cards */
     .admin-card {
       background: rgba(15, 23, 42, 0.6);
       border: 1px solid rgba(255, 255, 255, 0.08);
@@ -85,7 +85,6 @@
 
     .text-success { color: var(--accent); }
     .text-warning { color: var(--warning); }
-    .text-danger { color: var(--danger); }
 
     .item-card { background: rgba(15, 23, 42, 0.4); border-radius: 12px; padding: 12px; margin-bottom: 10px; border: 1px solid rgba(255, 255, 255, 0.05); }
 
@@ -107,10 +106,10 @@
       <h2>Sales & Tasks</h2>
       <p style="color:var(--text-muted); font-size:0.85rem; margin-bottom:20px;">Введите 8-значный табельный номер</p>
       <div class="input-group">
-        <input type="number" id="login-id" placeholder="Например: 12345678" oninput="if(this.value.length > 8) this.value = this.value.slice(0,8);">
+        <input type="number" id="login-id" placeholder="88888888 (Админ)" oninput="if(this.value.length > 8) this.value = this.value.slice(0,8);">
       </div>
       <button class="btn" onclick="login()">Войти в систему</button>
-      <p style="margin-top: 15px; font-size: 0.75rem; color: #64748b;">Админ: 88888888 | Сотрудники заведены в БД</p>
+      <p style="margin-top: 15px; font-size: 0.75rem; color: #64748b;">Админ по умолчанию: <b>88888888</b></p>
     </div>
   </div>
 
@@ -143,25 +142,25 @@
       <div class="card">
         <div class="card-title">
           <span>Внести продажи за день</span>
-          <button style="background:none; border:none; color:var(--primary); font-size:0.8rem; cursor:pointer; font-weight:600;" onclick="openSalesModal()">+ Внести</button>
+          <button style="background:none; border:none; color:var(--primary); font-size:0.85rem; cursor:pointer; font-weight:600;" onclick="openSalesModal()">+ Внести</button>
         </div>
       </div>
 
       <div class="card">
         <div class="card-title">Основные показатели (KPI)</div>
-        <div id="main-metrics-list">Загрузка...</div>
+        <div id="main-metrics-list"></div>
       </div>
 
       <div class="card">
         <div class="card-title">Дополнительные планы</div>
-        <div id="extra-metrics-list">Загрузка...</div>
+        <div id="extra-metrics-list"></div>
       </div>
     </div>
 
     <!-- TAB 2: TASKS -->
     <div id="tab-tasks" class="view">
       <div class="card-title" style="margin-bottom: 12px;">Задачи периода</div>
-      <div id="tasks-container">Загрузка...</div>
+      <div id="tasks-container"></div>
     </div>
 
     <!-- TAB 3: PROFILE -->
@@ -183,37 +182,33 @@
             <option value="all">Все сотрудники</option>
           </select>
         </div>
-        <div id="profile-history-list">Загрузка...</div>
+        <div id="profile-history-list"></div>
       </div>
     </div>
 
-    <!-- TAB 4: ADMIN -->
+    <!-- TAB 4: ADMIN PANEL -->
     <div id="tab-admin" class="view">
-      <!-- Employees Management Card Section -->
+      <h2 style="font-size: 1.1rem; margin-bottom: 16px;">⚙️ Панель администратора</h2>
+
+      <!-- SECTION 1: EMPLOYEES -->
       <div class="card">
-        <div class="card-title">
-          <span>Сотрудники</span>
-          <button class="btn btn-small" style="background:var(--primary);" onclick="openEmployeeModal()">+ Добавить</button>
-        </div>
-        <div id="admin-employees-list">Загрузка сотрудников...</div>
+        <div class="card-title">👥 Управление сотрудниками</div>
+        <button class="btn" style="margin-bottom: 14px; background: var(--primary);" onclick="openEmployeeModal()">+ Добавить сотрудника</button>
+        <div id="admin-employees-list"></div>
       </div>
 
-      <!-- Periods/Plans Management Cards Section -->
+      <!-- SECTION 2: PLANS & PERIODS -->
       <div class="card">
-        <div class="card-title">
-          <span>Периоды и Планы</span>
-          <button class="btn btn-small" style="background:var(--primary);" onclick="openPeriodModal()">+ Создать план</button>
-        </div>
-        <div id="admin-periods-list">Загрузка планов...</div>
+        <div class="card-title">📊 Управление планами и периодами</div>
+        <button class="btn" style="margin-bottom: 14px; background: var(--primary);" onclick="openPeriodModal()">+ Создать новый план</button>
+        <div id="admin-periods-list"></div>
       </div>
 
-      <!-- Tasks Management Section -->
+      <!-- SECTION 3: TASKS -->
       <div class="card">
-        <div class="card-title">
-          <span>Задачи</span>
-          <button class="btn btn-small btn-secondary" style="margin:0;" onclick="openTaskCreateModal()">+ Создать задачу</button>
-        </div>
-        <div id="admin-tasks-monitor" style="margin-top:10px;"></div>
+        <div class="card-title">✅ Управление задачами</div>
+        <button class="btn btn-secondary" style="margin-bottom: 14px; margin-top:0;" onclick="openTaskCreateModal()">+ Создать новую задачу</button>
+        <div id="admin-tasks-monitor"></div>
       </div>
     </div>
 
@@ -237,12 +232,12 @@
       <input type="date" id="input-sale-date">
     </div>
     <div id="sales-inputs-container"></div>
-    <button class="btn" onclick="saveSales()">Сохранить в БД</button>
+    <button class="btn" onclick="saveSales()">Сохранить</button>
     <button class="btn btn-secondary" onclick="closeModal('modal-sales')">Отмена</button>
   </div>
 </div>
 
-<!-- MODAL: EMPLOYEE (Add / Edit) -->
+<!-- MODAL: EMPLOYEE -->
 <div class="modal" id="modal-employee">
   <div class="modal-content">
     <h3 style="margin-bottom: 16px;" id="modal-employee-title">Добавить сотрудника</h3>
@@ -267,14 +262,14 @@
   </div>
 </div>
 
-<!-- MODAL: PERIOD & PLANS (Add / Edit Card) -->
+<!-- MODAL: PERIOD & PLANS -->
 <div class="modal" id="modal-period">
   <div class="modal-content">
     <h3 style="margin-bottom: 16px;" id="modal-period-title">Создать план</h3>
     <input type="hidden" id="editing-period-id" value="">
     <div class="input-group">
       <label>Название периода</label>
-      <input type="text" id="edit-period-title" placeholder="Например: Первая неделя">
+      <input type="text" id="edit-period-title" placeholder="Например: План на неделю">
     </div>
     <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
       <div class="input-group"><label>Дата начала</label><input type="date" id="edit-period-start"></div>
@@ -306,18 +301,43 @@
 </div>
 
 <script>
-  // --- SUPABASE CONFIG ---
+  // SUPABASE CONFIG (Вставьте сюда свои ключи, если хотите связать с БД)
   const SUPABASE_URL = 'https://icuwdhqcdobevgmhlhod.supabase.co';
   const SUPABASE_ANON_KEY = 'sb_publishable_vmARBTTLeCypr0mNcLWJ_w_VSImIwoD';
-  const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  
+  let _supabase = null;
+  try {
+    if (SUPABASE_URL.indexOf('YOUR_PROJECT_ID') === -1) {
+      _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    }
+  } catch(e) { console.log('Supabase не подключен'); }
 
-  // APP STATE
-  let currentUser = null; // { tab_number, name, role }
-  let activePeriod = null;
-  let allPeriods = [];
-  let employeesList = [];
+  // STATE
+  let currentUser = null;
+  const ADMIN_ID = '88888888';
+
+  // Demo Fallback Data
+  let employeesList = [
+    { tab_number: '88888888', name: 'Главный Администратор', role: 'admin' },
+    { tab_number: '12345678', name: 'Иванов Иван', role: 'employee' }
+  ];
+
+  let allPeriods = [
+    {
+      id: 1,
+      title: 'Неделя 1 (Август)',
+      start_date: getTodayStr(),
+      end_date: getPastDateStr(-6),
+      is_active: true,
+      plans: { sim: 35, subscriptions: 14, merch: 70000, accessories: 35000, finServices: 21000, adapter: 14, bankCard: 7, homeInternet: 7 }
+    }
+  ];
+
+  let activePeriod = allPeriods[0];
   let salesHistory = [];
-  let tasks = [];
+  let tasks = [
+    { id: 1, title: 'Пройти обучение по СИМ картам', type: 'checkbox', target: 0, date: getPastDateStr(-3) }
+  ];
   let userTaskProgress = {};
 
   const metricLabels = {
@@ -331,31 +351,40 @@
     finServices: 'fin_services', adapter: 'adapter', bankCard: 'bank_card', homeInternet: 'home_internet'
   };
 
-  const getTodayStr = () => new Date().toISOString().split('T')[0];
+  function getTodayStr() { return new Date().toISOString().split('T')[0]; }
+  function getPastDateStr(daysAgo) { let d = new Date(); d.setDate(d.getDate() - daysAgo); return d.toISOString().split('T')[0]; }
 
-  // --- AUTHENTICATION ---
   async function login() {
     const idInput = document.getElementById('login-id').value;
     if (idInput.length !== 8) return alert('Табельный номер должен состоять ровно из 8 цифр!');
 
-    // Check employee in DB
-    const { data: emp, error } = await _supabase.from('employees').select('*').eq('tab_number', idInput).single();
+    // Fetch or check user
+    let emp = employeesList.find(e => e.tab_number === idInput);
 
-    if (error || !emp) {
-      alert('Сотрудник с таким табельным номером не найден в базе данных!');
-      return;
+    if (_supabase) {
+      const { data } = await _supabase.from('employees').select('*').eq('tab_number', idInput).single();
+      if (data) emp = data;
+    }
+
+    if (!emp) {
+      if (idInput === ADMIN_ID) {
+        emp = { tab_number: ADMIN_ID, name: 'Администратор', role: 'admin' };
+      } else {
+        alert('Сотрудник с таким табельным номером не найден в системе!');
+        return;
+      }
     }
 
     currentUser = {
       tab_number: emp.tab_number,
       name: emp.name,
       role: emp.role,
-      isAdmin: emp.role === 'admin'
+      isAdmin: emp.role === 'admin' || emp.tab_number === ADMIN_ID
     };
 
     document.getElementById('login-screen').style.display = 'none';
     document.getElementById('app').style.display = 'flex';
-    document.getElementById('user-display').innerText = `${currentUser.name} (Таб: ${currentUser.tab_number})`;
+    document.getElementById('user-display').innerText = `${currentUser.name} (${currentUser.tab_number})`;
     document.getElementById('profile-user-name').innerText = currentUser.name;
     document.getElementById('profile-user-id').innerText = currentUser.tab_number;
     document.getElementById('profile-user-role').innerText = currentUser.isAdmin ? 'Администратор' : 'Сотрудник';
@@ -386,28 +415,29 @@
     element.classList.add('active');
   }
 
-  // --- DATA LOADING & CALCULATIONS ---
   async function loadDataFromSupabase() {
-    // 1. Employees
-    const { data: empData } = await _supabase.from('employees').select('*').order('name');
-    employeesList = empData || [];
+    if (_supabase) {
+      try {
+        const { data: eData } = await _supabase.from('employees').select('*').order('name');
+        if (eData) employeesList = eData;
 
-    // 2. Periods / Plans
-    const { data: periodData } = await _supabase.from('active_periods').select('*').order('created_at', { ascending: false });
-    allPeriods = periodData || [];
-    activePeriod = allPeriods.find(p => p.is_active) || allPeriods[0] || null;
+        const { data: pData } = await _supabase.from('active_periods').select('*').order('created_at', { ascending: false });
+        if (pData && pData.length > 0) {
+          allPeriods = pData;
+          activePeriod = allPeriods.find(p => p.is_active) || allPeriods[0];
+        }
 
-    // 3. Sales
-    const { data: salesData } = await _supabase.from('sales_records').select('*');
-    salesHistory = salesData || [];
+        const { data: sData } = await _supabase.from('sales_records').select('*');
+        if (sData) salesHistory = sData;
 
-    // 4. Tasks & Progress
-    const { data: tasksData } = await _supabase.from('tasks').select('*');
-    tasks = tasksData || [];
+        const { data: tData } = await _supabase.from('tasks').select('*');
+        if (tData) tasks = tData;
 
-    const { data: progressData } = await _supabase.from('user_task_progress').select('*').eq('user_id', currentUser.tab_number);
-    userTaskProgress = {};
-    (progressData || []).forEach(p => { userTaskProgress[p.task_id] = p; });
+        const { data: prData } = await _supabase.from('user_task_progress').select('*').eq('user_id', currentUser.tab_number);
+        userTaskProgress = {};
+        (prData || []).forEach(p => { userTaskProgress[p.task_id] = p; });
+      } catch (e) { console.log('Supabase Sync failed, using local mode.'); }
+    }
 
     renderDashboard();
     renderTasks();
@@ -453,10 +483,7 @@
   }
 
   function renderDashboard() {
-    if (!activePeriod) {
-      document.getElementById('main-metrics-list').innerHTML = 'Планы не настроены. Обратитесь к администратору.';
-      return;
-    }
+    if (!activePeriod) return;
     const periodInfo = getPeriodDetails();
 
     document.getElementById('period-dates-display').innerText = `${activePeriod.title || 'Период'}: ${periodInfo.startFormatted} — ${periodInfo.endFormatted}`;
@@ -465,7 +492,7 @@
     let userRecords = salesHistory.filter(r => r.user_id === currentUser.tab_number);
     let accSales = { sim: 0, subscriptions: 0, merch: 0, accessories: 0, finServices: 0, adapter: 0, bankCard: 0, homeInternet: 0 };
     userRecords.forEach(r => {
-      Object.keys(dbFieldMap).forEach(k => { accSales[k] += Number(r[dbFieldMap[k]] || 0); });
+      Object.keys(dbFieldMap).forEach(k => { accSales[k] += Number(r[dbFieldMap[k]] || r[k] || 0); });
     });
 
     let forecastSales = {};
@@ -500,9 +527,29 @@
         </div>
       `;
     });
+
+    const extraKeys = ['adapter', 'bankCard', 'homeInternet'];
+    const extraList = document.getElementById('extra-metrics-list');
+    extraList.innerHTML = '';
+
+    extraKeys.forEach(key => {
+      const plan = activePeriod.plans[key] || 0;
+      const acc = accSales[key];
+      const fc = forecastSales[key];
+
+      extraList.innerHTML += `
+        <div class="metric-card-full">
+          <div class="metric-head"><span>${metricLabels[key]}</span></div>
+          <div class="metric-row">
+            <div><div class="metric-col-title">День план</div><strong>${Math.ceil(plan / periodInfo.totalDays)}</strong></div>
+            <div><div class="metric-col-title">Факт накоплен</div><strong>${acc}</strong> / ${plan}</div>
+            <div><div class="metric-col-title">Прогноз</div><strong>${fc}</strong></div>
+          </div>
+        </div>
+      `;
+    });
   }
 
-  // --- SALES ENTRY ---
   function openSalesModal() {
     document.getElementById('input-sale-date').value = getTodayStr();
     const container = document.getElementById('sales-inputs-container');
@@ -520,14 +567,20 @@
     let payload = { user_id: currentUser.tab_number, date: dateVal };
     Object.keys(metricLabels).forEach(key => {
       payload[dbFieldMap[key]] = parseFloat(document.getElementById(`input-sale-${key}`).value) || 0;
+      payload[key] = payload[dbFieldMap[key]];
     });
 
-    await _supabase.from('sales_records').insert([payload]);
+    if (_supabase) {
+      await _supabase.from('sales_records').insert([payload]);
+    } else {
+      payload.id = Date.now();
+      salesHistory.push(payload);
+    }
+
     closeModal('modal-sales');
     await loadDataFromSupabase();
   }
 
-  // --- PROFILE & HISTORY ---
   function renderProfileHistory() {
     const list = document.getElementById('profile-history-list');
     list.innerHTML = '';
@@ -552,7 +605,7 @@
             <button class="btn btn-small btn-danger-outline" onclick="deleteSalesRecord(${r.id})">🗑️</button>
           </div>
           <div style="font-size:0.75rem; color:var(--text-muted);">
-            СИМ: ${r.sim} | Абонементы: ${r.subscriptions} | Товарка: ${r.merch}р | Аксы: ${r.accessories}р
+            СИМ: ${r.sim || r.fin_services || 0} | Товарка: ${r.merch || 0}р | Аксы: ${r.accessories || 0}р
           </div>
         </div>
       `;
@@ -561,14 +614,15 @@
 
   async function deleteSalesRecord(id) {
     if (confirm('Удалить эту запись?')) {
-      await _supabase.from('sales_records').delete().eq('id', id);
+      if (_supabase) await _supabase.from('sales_records').delete().eq('id', id);
+      else salesHistory = salesHistory.filter(r => r.id !== id);
       await loadDataFromSupabase();
     }
   }
 
-  // --- ADMIN PANEL: EMPLOYEES CARDS ---
+  // ADMIN PANEL RENDERING
   function renderAdminPanel() {
-    // 1. Employees List Cards
+    // 1. Employees List
     const empContainer = document.getElementById('admin-employees-list');
     empContainer.innerHTML = '';
     employeesList.forEach(emp => {
@@ -588,7 +642,7 @@
       `;
     });
 
-    // 2. Periods / Plans List Cards
+    // 2. Periods List
     const periodsContainer = document.getElementById('admin-periods-list');
     periodsContainer.innerHTML = '';
     allPeriods.forEach(p => {
@@ -596,7 +650,7 @@
         <div class="admin-card">
           <div class="admin-card-header">
             <div>
-              <strong>${p.title || 'Без названия'}</strong>
+              <strong>${p.title || 'Период продаж'}</strong>
               <span class="badge-status ${p.is_active ? 'badge-active' : 'badge-inactive'}">${p.is_active ? 'АКТИВЕН' : 'Неактивен'}</span>
               <div style="font-size:0.75rem; color:var(--text-muted); margin-top:2px;">${p.start_date} — ${p.end_date}</div>
             </div>
@@ -623,7 +677,6 @@
     });
   }
 
-  // --- EMPLOYEE MODAL HANDLERS ---
   function openEmployeeModal(tabNumber = null) {
     if (tabNumber) {
       const emp = employeesList.find(e => e.tab_number === tabNumber);
@@ -648,12 +701,18 @@
     const name = document.getElementById('emp-name').value;
     const role = document.getElementById('emp-role').value;
 
-    if (tabNumber.length !== 8 || !name) return alert('Введите корректные 8 цифр табельного и ФИО');
+    if (tabNumber.length !== 8 || !name) return alert('Введите корректный 8-значный табельный и ФИО');
 
-    if (origTab) {
-      await _supabase.from('employees').update({ name, role }).eq('tab_number', origTab);
+    if (_supabase) {
+      if (origTab) await _supabase.from('employees').update({ name, role }).eq('tab_number', origTab);
+      else await _supabase.from('employees').insert([{ tab_number: tabNumber, name, role }]);
     } else {
-      await _supabase.from('employees').insert([{ tab_number: tabNumber, name, role }]);
+      if (origTab) {
+        let idx = employeesList.findIndex(e => e.tab_number === origTab);
+        if (idx !== -1) employeesList[idx] = { tab_number: tabNumber, name, role };
+      } else {
+        employeesList.push({ tab_number: tabNumber, name, role });
+      }
     }
 
     closeModal('modal-employee');
@@ -662,12 +721,12 @@
 
   async function deleteEmployee(tabNumber) {
     if (confirm(`Удалить сотрудника ${tabNumber}?`)) {
-      await _supabase.from('employees').delete().eq('tab_number', tabNumber);
+      if (_supabase) await _supabase.from('employees').delete().eq('tab_number', tabNumber);
+      else employeesList = employeesList.filter(e => e.tab_number !== tabNumber);
       await loadDataFromSupabase();
     }
   }
 
-  // --- PERIOD & PLAN CARDS MODAL HANDLERS ---
   function openPeriodModal(periodId = null) {
     const container = document.getElementById('period-plans-inputs-container');
     container.innerHTML = '';
@@ -675,7 +734,7 @@
     let periodData = {
       title: '',
       start_date: getTodayStr(),
-      end_date: getTodayStr(),
+      end_date: getPastDateStr(-6),
       plans: { sim: 35, subscriptions: 14, merch: 70000, accessories: 35000, finServices: 21000, adapter: 14, bankCard: 7, homeInternet: 7 }
     };
 
@@ -718,11 +777,18 @@
 
     const payload = { title, start_date: start, end_date: end, plans: plansObj };
 
-    if (periodId) {
-      await _supabase.from('active_periods').update(payload).eq('id', periodId);
+    if (_supabase) {
+      if (periodId) await _supabase.from('active_periods').update(payload).eq('id', periodId);
+      else { payload.is_active = false; await _supabase.from('active_periods').insert([payload]); }
     } else {
-      payload.is_active = false;
-      await _supabase.from('active_periods').insert([payload]);
+      if (periodId) {
+        let idx = allPeriods.findIndex(p => p.id == periodId);
+        if (idx !== -1) allPeriods[idx] = { ...allPeriods[idx], ...payload };
+      } else {
+        payload.id = Date.now();
+        payload.is_active = false;
+        allPeriods.push(payload);
+      }
     }
 
     closeModal('modal-period');
@@ -730,20 +796,23 @@
   }
 
   async function setActivePeriod(periodId) {
-    // Deactivate all, activate selected
-    await _supabase.from('active_periods').update({ is_active: false }).neq('id', 0);
-    await _supabase.from('active_periods').update({ is_active: true }).eq('id', periodId);
+    if (_supabase) {
+      await _supabase.from('active_periods').update({ is_active: false }).neq('id', 0);
+      await _supabase.from('active_periods').update({ is_active: true }).eq('id', periodId);
+    } else {
+      allPeriods.forEach(p => p.is_active = (p.id === periodId));
+    }
     await loadDataFromSupabase();
   }
 
   async function deletePeriod(periodId) {
-    if (confirm('Удалить этот период и план?')) {
-      await _supabase.from('active_periods').delete().eq('id', periodId);
+    if (confirm('Удалить этот план?')) {
+      if (_supabase) await _supabase.from('active_periods').delete().eq('id', periodId);
+      else allPeriods = allPeriods.filter(p => p.id !== periodId);
       await loadDataFromSupabase();
     }
   }
 
-  // --- TASKS ---
   function renderTasks() {
     const container = document.getElementById('tasks-container');
     container.innerHTML = '';
@@ -767,13 +836,22 @@
   }
 
   async function toggleTask(taskId, isCompleted) {
-    await _supabase.from('user_task_progress').upsert({ user_id: currentUser.tab_number, task_id: taskId, completed: isCompleted });
+    if (_supabase) {
+      await _supabase.from('user_task_progress').upsert({ user_id: currentUser.tab_number, task_id: taskId, completed: isCompleted });
+    } else {
+      userTaskProgress[taskId] = { completed: isCompleted, current_val: 0 };
+    }
     await loadDataFromSupabase();
   }
 
   async function updateNumericTask(taskId, val, target) {
     const currentVal = parseInt(val) || 0;
-    await _supabase.from('user_task_progress').upsert({ user_id: currentUser.tab_number, task_id: taskId, current_val: currentVal, completed: currentVal >= target });
+    const isCompleted = currentVal >= target;
+    if (_supabase) {
+      await _supabase.from('user_task_progress').upsert({ user_id: currentUser.tab_number, task_id: taskId, current_val: currentVal, completed: isCompleted });
+    } else {
+      userTaskProgress[taskId] = { completed: isCompleted, current_val: currentVal };
+    }
     await loadDataFromSupabase();
   }
 
@@ -784,14 +862,22 @@
     const target = parseInt(document.getElementById('new-task-target').value) || 0;
     const date = document.getElementById('new-task-date').value;
 
-    await _supabase.from('tasks').insert([{ title, type, target, date }]);
+    if (!title) return alert('Введите название задачи');
+
+    if (_supabase) {
+      await _supabase.from('tasks').insert([{ title, type, target, date }]);
+    } else {
+      tasks.push({ id: Date.now(), title, type, target, date });
+    }
+
     closeModal('modal-add-task');
     await loadDataFromSupabase();
   }
 
   async function deleteTask(id) {
-    if (confirm('Удалить задачу?')) {
-      await _supabase.from('tasks').delete().eq('id', id);
+    if (confirm('Удалить эту задачу?')) {
+      if (_supabase) await _supabase.from('tasks').delete().eq('id', id);
+      else tasks = tasks.filter(t => t.id !== id);
       await loadDataFromSupabase();
     }
   }
