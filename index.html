@@ -2,9 +2,19 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sales & Task Manager</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Sales & Task Manager PWA</title>
+
+  <!-- PWA Settings -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#6366f1">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Supabase JS Client -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
   <style>
     :root {
       --bg: #0f172a;
@@ -20,30 +30,16 @@
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
-    body { background-color: var(--bg); color: var(--text); display: flex; justify-content: center; min-height: 100vh; padding: 0; }
+    body { background-color: var(--bg); color: var(--text); display: flex; justify-content: center; min-height: 100vh; }
 
     .app-container {
-      width: 100%;
-      max-width: 480px;
-      background: #020617;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      position: relative;
-      box-shadow: 0 0 50px rgba(0,0,0,0.8);
+      width: 100%; max-width: 480px; background: #020617; min-height: 100vh;
+      display: flex; flex-direction: column; position: relative; box-shadow: 0 0 50px rgba(0,0,0,0.8);
     }
 
     header {
-      padding: 16px 20px;
-      background: var(--card-bg);
-      backdrop-filter: blur(12px);
-      border-bottom: 1px solid var(--card-border);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      position: sticky;
-      top: 0;
-      z-index: 10;
+      padding: 16px 20px; background: var(--card-bg); backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--card-border); display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 10;
     }
     header h1 { font-size: 1.1rem; font-weight: 700; color: #fff; }
     .user-badge { font-size: 0.75rem; background: rgba(99, 102, 241, 0.2); color: #818cf8; padding: 4px 10px; border-radius: 20px; border: 1px solid rgba(99, 102, 241, 0.3); }
@@ -51,86 +47,44 @@
     .view { display: none; padding: 20px; padding-bottom: 90px; flex: 1; }
     .view.active { display: block; }
 
-    #login-screen {
-      display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 30px; text-align: center; min-height: 100vh;
-    }
-    .login-box {
-      width: 100%; background: var(--card-bg); padding: 30px 20px; border-radius: 24px; border: 1px solid var(--card-border); backdrop-filter: blur(10px);
-    }
+    #login-screen { display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 30px; text-align: center; min-height: 100vh; }
+    .login-box { width: 100%; background: var(--card-bg); padding: 30px 20px; border-radius: 24px; border: 1px solid var(--card-border); backdrop-filter: blur(10px); }
     .login-box h2 { font-size: 1.5rem; margin-bottom: 8px; }
-    .login-box p { color: var(--text-muted); font-size: 0.85rem; margin-bottom: 24px; }
 
     .input-group { margin-bottom: 14px; text-align: left; }
     .input-group label { display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 6px; }
-    input, select {
-      width: 100%; padding: 12px 16px; background: rgba(15, 23, 42, 0.6); border: 1px solid var(--card-border); border-radius: 12px; color: #fff; font-size: 0.95rem; outline: none; transition: all 0.2s;
-    }
-    input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2); }
-
-    .btn {
-      width: 100%; padding: 14px; border: none; border-radius: 12px; background: var(--primary); color: #fff; font-weight: 600; font-size: 0.95rem; cursor: pointer; transition: background 0.2s;
-    }
-    .btn:hover { background: var(--primary-hover); }
+    input, select { width: 100%; padding: 12px 16px; background: rgba(15, 23, 42, 0.6); border: 1px solid var(--card-border); border-radius: 12px; color: #fff; font-size: 0.95rem; outline: none; }
+    
+    .btn { width: 100%; padding: 14px; border: none; border-radius: 12px; background: var(--primary); color: #fff; font-weight: 600; font-size: 0.95rem; cursor: pointer; }
     .btn-secondary { background: rgba(255, 255, 255, 0.1); color: #fff; margin-top: 8px; }
     .btn-danger-outline { background: transparent; border: 1px solid var(--danger); color: #f87171; }
     .btn-small { padding: 6px 12px; font-size: 0.75rem; border-radius: 8px; width: auto; }
 
-    .card {
-      background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 16px; padding: 16px; margin-bottom: 16px; backdrop-filter: blur(10px);
-    }
+    .card { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 16px; padding: 16px; margin-bottom: 16px; backdrop-filter: blur(10px); }
     .card-title { font-size: 0.9rem; font-weight: 600; color: var(--text-muted); margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
 
-    /* KPI Banner Dual Display */
-    .kpi-banner {
-      background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
-      border-radius: 20px; padding: 18px; color: #fff; margin-bottom: 20px; box-shadow: 0 10px 25px -5px rgba(79, 70, 229, 0.4);
-    }
+    .kpi-banner { background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%); border-radius: 20px; padding: 18px; color: #fff; margin-bottom: 20px; }
     .kpi-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; border-top: 1px solid rgba(255,255,255,0.2); padding-top: 12px; margin-top: 10px; }
-    .kpi-val { font-size: 1.8rem; font-weight: 800; line-height: 1.1; margin: 4px 0; }
-    .kpi-label { font-size: 0.75rem; opacity: 0.85; }
+    .kpi-val { font-size: 1.8rem; font-weight: 800; }
 
-    /* Sales Metric Cards */
-    .metric-card-full {
-      background: rgba(15, 23, 42, 0.5);
-      border: 1px solid rgba(255, 255, 255, 0.05);
-      border-radius: 12px;
-      padding: 12px;
-      margin-bottom: 10px;
-    }
+    .metric-card-full { background: rgba(15, 23, 42, 0.5); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 12px; padding: 12px; margin-bottom: 10px; }
     .metric-head { display: flex; justify-content: space-between; font-weight: 600; font-size: 0.85rem; margin-bottom: 8px; }
     .metric-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; font-size: 0.75rem; text-align: center; background: rgba(0,0,0,0.2); padding: 8px; border-radius: 8px; }
-    .metric-col-title { color: var(--text-muted); font-size: 0.65rem; margin-bottom: 2px; }
+    .metric-col-title { color: var(--text-muted); font-size: 0.65rem; }
 
     .text-success { color: var(--accent); }
     .text-warning { color: var(--warning); }
     .text-danger { color: var(--danger); }
 
-    .item-card {
-      background: rgba(15, 23, 42, 0.4); border-radius: 12px; padding: 12px; margin-bottom: 10px; border: 1px solid rgba(255, 255, 255, 0.05);
-    }
+    .item-card { background: rgba(15, 23, 42, 0.4); border-radius: 12px; padding: 12px; margin-bottom: 10px; border: 1px solid rgba(255, 255, 255, 0.05); }
     .item-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
-    .item-title { font-size: 0.85rem; font-weight: 600; color: #f1f5f9; }
-    .item-sub { font-size: 0.75rem; color: var(--text-muted); }
 
-    .history-details {
-      display: grid; grid-template-columns: 1fr 1fr; gap: 6px; font-size: 0.75rem; color: #cbd5e1; margin-bottom: 10px; background: rgba(0,0,0,0.2); padding: 8px; border-radius: 8px;
-    }
-
-    .nav-bar {
-      position: absolute; bottom: 0; width: 100%; height: 70px; background: rgba(15, 23, 42, 0.9); backdrop-filter: blur(16px); border-top: 1px solid var(--card-border); display: flex; justify-content: space-around; align-items: center; z-index: 10;
-    }
-    .nav-item {
-      display: flex; flex-direction: column; align-items: center; color: var(--text-muted); font-size: 0.7rem; text-decoration: none; cursor: pointer; gap: 4px;
-    }
+    .nav-bar { position: absolute; bottom: 0; width: 100%; height: 70px; background: rgba(15, 23, 42, 0.9); backdrop-filter: blur(16px); border-top: 1px solid var(--card-border); display: flex; justify-content: space-around; align-items: center; z-index: 10; }
+    .nav-item { display: flex; flex-direction: column; align-items: center; color: var(--text-muted); font-size: 0.7rem; cursor: pointer; gap: 4px; }
     .nav-item.active { color: var(--primary); font-weight: 600; }
-    .nav-icon { font-size: 1.2rem; }
 
-    .modal {
-      display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(5px); z-index: 100; align-items: center; justify-content: center; padding: 20px;
-    }
-    .modal-content {
-      background: #1e293b; width: 100%; max-width: 420px; max-height: 85vh; overflow-y: auto; border-radius: 20px; padding: 20px; border: 1px solid var(--card-border);
-    }
+    .modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(5px); z-index: 100; align-items: center; justify-content: center; padding: 20px; }
+    .modal-content { background: #1e293b; width: 100%; max-width: 420px; max-height: 85vh; overflow-y: auto; border-radius: 20px; padding: 20px; border: 1px solid var(--card-border); }
   </style>
 </head>
 <body>
@@ -140,14 +94,12 @@
   <!-- LOGIN SCREEN -->
   <div id="login-screen">
     <div class="login-box">
-      <h2>Авторизация</h2>
-      <p>Введите ваш 8-значный табельный номер</p>
+      <h2>Sales & Tasks</h2>
+      <p style="color:var(--text-muted); font-size:0.85rem; margin-bottom:20px;">Введите 8-значный табельный номер</p>
       <div class="input-group">
-        <label for="login-id">Табельный номер</label>
-        <input type="number" id="login-id" placeholder="Например: 12345678" oninput="if(this.value.length > 8) this.value = this.value.slice(0,8);">
+        <input type="number" id="login-id" placeholder="12345678" oninput="if(this.value.length > 8) this.value = this.value.slice(0,8);">
       </div>
       <button class="btn" onclick="login()">Войти</button>
-      <p style="margin-top: 15px; font-size: 0.75rem; color: #64748b;">Админ: 88888888 | Сотрудник: любой другой</p>
     </div>
   </div>
 
@@ -158,26 +110,21 @@
       <div class="user-badge" id="user-display">Таб: -</div>
     </header>
 
-    <!-- TAB 1: SALES & FORECAST -->
+    <!-- TAB 1: DASHBOARD -->
     <div id="tab-sales" class="view active">
-      
-      <!-- KPI BANNER -->
       <div class="kpi-banner">
         <div style="display:flex; justify-content:space-between; align-items:center;">
           <span style="font-size: 0.8rem; opacity: 0.9;" id="period-dates-display">Период: -</span>
-          <span id="week-day-tag" style="font-size: 0.7rem; background:rgba(0,0,0,0.3); padding: 3px 8px; border-radius:10px;">День - из -</span>
+          <span id="week-day-tag" style="font-size: 0.7rem; background:rgba(0,0,0,0.3); padding: 3px 8px; border-radius:10px;">-</span>
         </div>
-
         <div class="kpi-grid">
           <div>
-            <div class="kpi-label">Текущий KPI</div>
+            <div style="font-size:0.75rem;">Текущий KPI</div>
             <div class="kpi-val" id="kpi-actual">0.00</div>
-            <div style="font-size:0.65rem; opacity:0.8;">По накопленным</div>
           </div>
           <div>
-            <div class="kpi-label">Прогноз KPI</div>
+            <div style="font-size:0.75rem;">Прогноз KPI</div>
             <div class="kpi-val" id="kpi-forecast" style="color: #6ee7b7;">0.00</div>
-            <div style="font-size:0.65rem; opacity:0.8;">На конец периода</div>
           </div>
         </div>
       </div>
@@ -185,168 +132,137 @@
       <div class="card">
         <div class="card-title">
           <span>Внести продажи за день</span>
-          <button style="background:none; border:none; color:var(--primary); font-size:0.8rem; cursor:pointer; font-weight:600;" onclick="openSalesModal()">+ Добавить</button>
+          <button style="background:none; border:none; color:var(--primary); font-size:0.8rem; cursor:pointer; font-weight:600;" onclick="openSalesModal()">+ Внести</button>
         </div>
       </div>
 
       <div class="card">
         <div class="card-title">Основные показатели (KPI)</div>
-        <div id="main-metrics-list"></div>
+        <div id="main-metrics-list">Загрузка...</div>
       </div>
 
       <div class="card">
         <div class="card-title">Дополнительные планы</div>
-        <div id="extra-metrics-list"></div>
+        <div id="extra-metrics-list">Загрузка...</div>
       </div>
     </div>
 
     <!-- TAB 2: TASKS -->
     <div id="tab-tasks" class="view">
-      <div class="card-title" style="margin-bottom: 12px;">Мои задачи</div>
-      <div id="tasks-container"></div>
+      <div class="card-title" style="margin-bottom: 12px;">Задачи периода</div>
+      <div id="tasks-container">Загрузка...</div>
     </div>
 
     <!-- TAB 3: PROFILE -->
     <div id="tab-profile" class="view">
       <div class="card">
-        <div class="card-title">Профиль пользователя</div>
+        <div class="card-title">Профиль сотрудника</div>
         <div style="margin-bottom: 12px; font-size: 0.9rem;">
-          <div><strong>Табельный номер:</strong> <span id="profile-user-id" style="color: var(--primary); font-weight: 600;">-</span></div>
-          <div style="margin-top: 4px;"><strong>Роль:</strong> <span id="profile-user-role" style="color: var(--text-muted);">-</span></div>
+          <div><strong>Табельный номер:</strong> <span id="profile-user-id" style="color: var(--primary);">-</span></div>
+          <div><strong>Роль:</strong> <span id="profile-user-role" style="color: var(--text-muted);">-</span></div>
         </div>
         <button class="btn btn-danger-outline" onclick="logout()">🚪 Выйти из аккаунта</button>
       </div>
 
       <div class="card">
         <div class="card-title">
-          <span>История дневных продаж</span>
-          <select id="admin-user-filter" style="width: auto; padding: 4px 8px; font-size: 0.75rem; display: none;" onchange="renderProfileHistory()">
+          <span>История внесения продаж</span>
+          <select id="admin-user-filter" style="width: auto; padding: 4px; font-size: 0.75rem; display: none;" onchange="renderProfileHistory()">
             <option value="all">Все сотрудники</option>
           </select>
         </div>
-        <div id="profile-history-list"></div>
+        <div id="profile-history-list">Загрузка...</div>
       </div>
     </div>
 
-    <!-- TAB 4: ADMIN PANEL -->
+    <!-- TAB 4: ADMIN -->
     <div id="tab-admin" class="view">
       <div class="card">
-        <div class="card-title">Управление планами</div>
-        <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px;">Вы можете настроить даты периода (например, 1-4 или 1-7) и цели продаж.</p>
+        <div class="card-title">Управление периодом и планами</div>
         <button class="btn" onclick="openEditPeriodModal()">⚙️ Настроить период и планы</button>
       </div>
-
       <div class="card">
         <div class="card-title">Управление задачами</div>
-        <button class="btn btn-secondary" style="margin-top:0;" onclick="openTaskCreateModal()">+ Создать новую задачу</button>
+        <button class="btn btn-secondary" onclick="openTaskCreateModal()">+ Создать задачу</button>
         <div id="admin-tasks-monitor" style="margin-top:14px;"></div>
       </div>
     </div>
 
-    <!-- BOTTOM NAVIGATION -->
+    <!-- NAVIGATION -->
     <nav class="nav-bar">
-      <div class="nav-item active" onclick="switchTab('sales', this)">
-        <span class="nav-icon">📊</span>
-        <span>Продажи</span>
-      </div>
-      <div class="nav-item" onclick="switchTab('tasks', this)">
-        <span class="nav-icon">✅</span>
-        <span>Задачи</span>
-      </div>
-      <div class="nav-item" onclick="switchTab('profile', this)">
-        <span class="nav-icon">👤</span>
-        <span>Профиль</span>
-      </div>
-      <div class="nav-item" id="admin-nav-item" style="display: none;" onclick="switchTab('admin', this)">
-        <span class="nav-icon">⚙️</span>
-        <span>Админка</span>
-      </div>
+      <div class="nav-item active" onclick="switchTab('sales', this)"><span>📊</span><span>Продажи</span></div>
+      <div class="nav-item" onclick="switchTab('tasks', this)"><span>✅</span><span>Задачи</span></div>
+      <div class="nav-item" onclick="switchTab('profile', this)"><span>👤</span><span>Профиль</span></div>
+      <div class="nav-item" id="admin-nav-item" style="display: none;" onclick="switchTab('admin', this)"><span>⚙️</span><span>Админка</span></div>
     </nav>
   </div>
-
 </div>
 
-<!-- MODAL: Insert/Edit Sales -->
+<!-- MODAL SALES -->
 <div class="modal" id="modal-sales">
   <div class="modal-content">
     <h3 style="margin-bottom: 16px;" id="modal-sales-title">Внести продажи за день</h3>
     <input type="hidden" id="editing-sales-id" value="">
     <div class="input-group">
-      <label>Дата внесения</label>
+      <label>Дата</label>
       <input type="date" id="input-sale-date">
     </div>
     <div id="sales-inputs-container"></div>
-    <button class="btn" onclick="saveSales()">Сохранить</button>
+    <button class="btn" onclick="saveSales()">Сохранить в БД</button>
     <button class="btn btn-secondary" onclick="closeModal('modal-sales')">Отмена</button>
   </div>
 </div>
 
-<!-- MODAL: Add Task (Admin) -->
-<div class="modal" id="modal-add-task">
-  <div class="modal-content">
-    <h3 style="margin-bottom: 16px;">Создать задачу</h3>
-    <div class="input-group">
-      <label>Название задачи</label>
-      <input type="text" id="new-task-title" placeholder="Пройти обучение...">
-    </div>
-    <div class="input-group">
-      <label>Тип задачи</label>
-      <select id="new-task-type" onchange="toggleTaskTypeInput()">
-        <option value="checkbox">Галочка (выполнено/нет)</option>
-        <option value="numeric">Числовая (план)</option>
-      </select>
-    </div>
-    <div class="input-group" id="task-target-group" style="display: none;">
-      <label>Целевое количество</label>
-      <input type="number" id="new-task-target" placeholder="18">
-    </div>
-    <div class="input-group">
-      <label>Срок выполнения (Дата)</label>
-      <input type="date" id="new-task-date">
-    </div>
-    <button class="btn" onclick="createNewTask()">Создать</button>
-    <button class="btn btn-secondary" onclick="closeModal('modal-add-task')">Отмена</button>
-  </div>
-</div>
-
-<!-- MODAL: Edit Period and Plans (Admin) -->
+<!-- MODAL ADMIN PERIOD -->
 <div class="modal" id="modal-edit-period">
   <div class="modal-content">
     <h3 style="margin-bottom: 16px;">Период и Планы</h3>
-    
     <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
-      <div class="input-group">
-        <label>Дата начала</label>
-        <input type="date" id="edit-period-start">
-      </div>
-      <div class="input-group">
-        <label>Дата окончания</label>
-        <input type="date" id="edit-period-end">
-      </div>
+      <div class="input-group"><label>Дата начала</label><input type="date" id="edit-period-start"></div>
+      <div class="input-group"><label>Дата окончания</label><input type="date" id="edit-period-end"></div>
     </div>
-
-    <h4 style="margin: 12px 0 8px 0; font-size: 0.85rem; color: var(--text-muted);">Планы на этот период:</h4>
     <div id="period-plans-inputs-container"></div>
-
-    <button class="btn" onclick="savePeriodAndPlans()">Сохранить период и планы</button>
+    <button class="btn" onclick="savePeriodAndPlans()">Сохранить в БД</button>
     <button class="btn btn-secondary" onclick="closeModal('modal-edit-period')">Отмена</button>
   </div>
 </div>
 
+<!-- MODAL ADD TASK -->
+<div class="modal" id="modal-add-task">
+  <div class="modal-content">
+    <h3>Создать задачу</h3>
+    <div class="input-group"><label>Название</label><input type="text" id="new-task-title"></div>
+    <div class="input-group"><label>Тип</label>
+      <select id="new-task-type" onchange="document.getElementById('task-target-group').style.display = this.value==='numeric'?'block':'none'">
+        <option value="checkbox">Галочка</option>
+        <option value="numeric">Числовая</option>
+      </select>
+    </div>
+    <div class="input-group" id="task-target-group" style="display:none;"><label>Цель</label><input type="number" id="new-task-target"></div>
+    <div class="input-group"><label>Срок</label><input type="date" id="new-task-date"></div>
+    <button class="btn" onclick="createNewTask()">Сохранить задачу</button>
+    <button class="btn btn-secondary" onclick="closeModal('modal-add-task')">Отмена</button>
+  </div>
+</div>
+
 <script>
-  // --- STATE ---
+  // --- SUPABASE INITIALIZATION ---
+  const SUPABASE_URL = 'https://YOUR_PROJECT_ID.supabase.co';
+  const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
+  const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  // Register PWA Service Worker
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js').catch(console.error);
+  }
+
+  // APP STATE
   let currentUser = null;
   const ADMIN_ID = '88888888';
-
-  // Dynamic Planning Period State (Admin Configurable)
-  let activePeriod = {
-    startDate: '2026-08-01',
-    endDate: '2026-08-07', // e.g. 7 days or 4 days (2026-08-04)
-    plans: {
-      sim: 35, subscriptions: 14, merch: 70000, accessories: 35000, finServices: 21000,
-      adapter: 14, bankCard: 7, homeInternet: 7
-    }
-  };
+  let activePeriod = null;
+  let salesHistory = [];
+  let tasks = [];
+  let userTaskProgress = {};
 
   const metricLabels = {
     sim: 'Основное СИМ (шт)', subscriptions: 'Абонементы (шт)', merch: 'Товарка (руб)',
@@ -354,89 +270,70 @@
     bankCard: 'Банковская карта', homeInternet: 'Домашний интернет'
   };
 
-  const getTodayStr = () => new Date().toISOString().split('T')[0];
-  const getPastDateStr = (daysAgo) => {
-    let d = new Date();
-    d.setDate(d.getDate() - daysAgo);
-    return d.toISOString().split('T')[0];
+  const dbFieldMap = {
+    sim: 'sim', subscriptions: 'subscriptions', merch: 'merch', accessories: 'accessories',
+    finServices: 'fin_services', adapter: 'adapter', bankCard: 'bank_card', homeInternet: 'home_internet'
   };
 
-  let salesHistory = [
-    {
-      id: 1, userId: '12345678', date: getPastDateStr(2),
-      sim: 5, subscriptions: 2, merch: 10000, accessories: 5000, finServices: 3000, adapter: 2, bankCard: 1, homeInternet: 1
-    },
-    {
-      id: 2, userId: '12345678', date: getPastDateStr(1),
-      sim: 6, subscriptions: 3, merch: 12000, accessories: 6000, finServices: 4000, adapter: 2, bankCard: 1, homeInternet: 1
-    },
-    {
-      id: 3, userId: '12345678', date: getTodayStr(),
-      sim: 4, subscriptions: 1, merch: 8000, accessories: 4000, finServices: 2000, adapter: 1, bankCard: 0, homeInternet: 1
-    }
-  ];
+  const getTodayStr = () => new Date().toISOString().split('T')[0];
 
-  let tasks = [
-    { id: 1, title: 'Пройти обучение по СИМ картам', type: 'checkbox', completed: false, date: '2026-08-10' },
-    { id: 2, title: 'Сделать 18 бесплатных СИМ', type: 'numeric', current: 10, target: 18, completed: false, date: '2026-08-15' }
-  ];
-
-  // --- DYNAMIC DATES CALCULATOR ---
-  function getPeriodDetails() {
-    const start = new Date(activePeriod.startDate);
-    const end = new Date(activePeriod.endDate);
-    const today = new Date();
-
-    start.setHours(0,0,0,0);
-    end.setHours(0,0,0,0);
-    today.setHours(0,0,0,0);
-
-    const totalTime = Math.max(0, end - start);
-    const totalDays = Math.max(1, Math.round(totalTime / (1000 * 60 * 60 * 24)) + 1);
-
-    let elapsedTime = today - start;
-    let elapsedDays = Math.round(elapsedTime / (1000 * 60 * 60 * 24)) + 1;
-
-    if (elapsedDays < 1) elapsedDays = 1;
-    if (elapsedDays > totalDays) elapsedDays = totalDays;
-
-    const formatDate = (dateStr) => {
-      const parts = dateStr.split('-');
-      return `${parts[2]}.${parts[1]}`;
-    };
-
-    return {
-      totalDays,
-      elapsedDays,
-      startFormatted: formatDate(activePeriod.startDate),
-      endFormatted: formatDate(activePeriod.endDate)
-    };
-  }
-
-  // --- AUTHENTICATION ---
-  function login() {
+  async function login() {
     const idInput = document.getElementById('login-id').value;
-    if (idInput.length !== 8) {
-      alert('Табельный номер должен состоять ровно из 8 цифр!');
-      return;
-    }
+    if (idInput.length !== 8) return alert('Табельный номер должен состоять ровно из 8 цифр!');
 
     currentUser = { id: idInput, isAdmin: idInput === ADMIN_ID };
 
     document.getElementById('login-screen').style.display = 'none';
     document.getElementById('app').style.display = 'flex';
     document.getElementById('user-display').innerText = `Таб: ${currentUser.id} ${currentUser.isAdmin ? '(Админ)' : ''}`;
-
     document.getElementById('profile-user-id').innerText = currentUser.id;
     document.getElementById('profile-user-role').innerText = currentUser.isAdmin ? 'Администратор' : 'Сотрудник';
 
     if (currentUser.isAdmin) {
       document.getElementById('admin-nav-item').style.display = 'flex';
       document.getElementById('admin-user-filter').style.display = 'inline-block';
-    } else {
-      document.getElementById('admin-nav-item').style.display = 'none';
-      document.getElementById('admin-user-filter').style.display = 'none';
     }
+
+    await loadDataFromSupabase();
+  }
+
+  function logout() {
+    currentUser = null;
+    document.getElementById('app').style.display = 'none';
+    document.getElementById('login-screen').style.display = 'flex';
+  }
+
+  function switchTab(tabName, element) {
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    document.getElementById(`tab-${tabName}`).classList.add('active');
+    element.classList.add('active');
+  }
+
+  // --- SUPABASE DATA SYNC ---
+  async function loadDataFromSupabase() {
+    // 1. Fetch active period & plans
+    const { data: periodData } = await _supabase.from('active_periods').select('*').eq('is_active', true).single();
+    if (periodData) {
+      activePeriod = {
+        startDate: periodData.start_date,
+        endDate: periodData.end_date,
+        plans: periodData.plans
+      };
+    }
+
+    // 2. Fetch sales records
+    const { data: salesData } = await _supabase.from('sales_records').select('*');
+    salesHistory = salesData || [];
+
+    // 3. Fetch tasks
+    const { data: tasksData } = await _supabase.from('tasks').select('*');
+    tasks = tasksData || [];
+
+    // 4. Fetch User task progress
+    const { data: progressData } = await _supabase.from('user_task_progress').select('*').eq('user_id', currentUser.id);
+    userTaskProgress = {};
+    (progressData || []).forEach(p => { userTaskProgress[p.task_id] = p; });
 
     renderDashboard();
     renderTasks();
@@ -444,51 +341,24 @@
     if (currentUser.isAdmin) renderAdminPanel();
   }
 
-  function logout() {
-    currentUser = null;
-    document.getElementById('app').style.display = 'none';
-    document.getElementById('login-screen').style.display = 'flex';
-    document.getElementById('login-id').value = '';
-    switchTab('sales', document.querySelectorAll('.nav-item')[0]);
-  }
+  function getPeriodDetails() {
+    if (!activePeriod) return { totalDays: 1, elapsedDays: 1, startFormatted: '', endFormatted: '' };
+    const start = new Date(activePeriod.startDate);
+    const end = new Date(activePeriod.endDate);
+    const today = new Date();
 
-  function switchTab(tabName, element) {
-    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    start.setHours(0,0,0,0); end.setHours(0,0,0,0); today.setHours(0,0,0,0);
 
-    document.getElementById(`tab-${tabName}`).classList.add('active');
-    element.classList.add('active');
+    const totalDays = Math.max(1, Math.round((end - start) / (1000 * 60 * 60 * 24)) + 1);
+    let elapsedDays = Math.round((today - start) / (1000 * 60 * 60 * 24)) + 1;
+    if (elapsedDays < 1) elapsedDays = 1;
+    if (elapsedDays > totalDays) elapsedDays = totalDays;
 
-    if (tabName === 'profile') renderProfileHistory();
-  }
-
-  // --- SALES & FORECAST CALCULATIONS ---
-  function getTodaySales(userId) {
-    const todayStr = getTodayStr();
-    const records = salesHistory.filter(r => r.userId === userId && r.date === todayStr);
-    let totals = { sim: 0, subscriptions: 0, merch: 0, accessories: 0, finServices: 0, adapter: 0, bankCard: 0, homeInternet: 0 };
-    records.forEach(r => Object.keys(totals).forEach(k => totals[k] += (r[k] || 0)));
-    return totals;
-  }
-
-  function getPeriodAccumulatedSales(userId) {
-    const userRecords = salesHistory.filter(r => r.userId === userId);
-    let totals = { sim: 0, subscriptions: 0, merch: 0, accessories: 0, finServices: 0, adapter: 0, bankCard: 0, homeInternet: 0 };
-    userRecords.forEach(r => Object.keys(totals).forEach(k => totals[k] += (r[k] || 0)));
-    return totals;
-  }
-
-  function getPeriodForecastSales(accumulatedTotals) {
-    const { totalDays, elapsedDays } = getPeriodDetails();
-    let forecast = {};
-    Object.keys(accumulatedTotals).forEach(k => {
-      let avgPerDay = accumulatedTotals[k] / elapsedDays;
-      forecast[k] = Math.round(avgPerDay * totalDays);
-    });
-    return forecast;
+    return { totalDays, elapsedDays, startFormatted: activePeriod.startDate, endFormatted: activePeriod.endDate };
   }
 
   function calculateKPI(salesMap) {
+    if (!activePeriod) return 0;
     const mainKeys = ['sim', 'subscriptions', 'merch', 'accessories', 'finServices'];
     let percentages = [];
     let allOver150 = true;
@@ -502,285 +372,134 @@
 
     let totalPct = percentages.reduce((a, b) => a + b, 0) / 5;
     let kpiValue = totalPct / 100;
-
     if (allOver150) kpiValue = 2.0;
     if (kpiValue < 0.70) kpiValue = 0.70;
 
     return kpiValue;
   }
 
-  // --- DASHBOARD RENDER ---
   function renderDashboard() {
+    if (!activePeriod) return;
     const periodInfo = getPeriodDetails();
-    
-    document.getElementById('period-dates-display').innerText = `Период: ${periodInfo.startFormatted} — ${periodInfo.endFormatted}`;
+
+    document.getElementById('period-dates-display').innerText = `${periodInfo.startFormatted} — ${periodInfo.endFormatted}`;
     document.getElementById('week-day-tag').innerText = `День ${periodInfo.elapsedDays} из ${periodInfo.totalDays}`;
 
-    const todaySales = getTodaySales(currentUser.id);
-    const accumulatedSales = getPeriodAccumulatedSales(currentUser.id);
-    const forecastSales = getPeriodForecastSales(accumulatedSales);
+    // Calculate Accumulated Sales for user
+    let userRecords = salesHistory.filter(r => r.user_id === currentUser.id);
+    let accSales = { sim: 0, subscriptions: 0, merch: 0, accessories: 0, finServices: 0, adapter: 0, bankCard: 0, homeInternet: 0 };
+    userRecords.forEach(r => {
+      Object.keys(dbFieldMap).forEach(k => { accSales[k] += Number(r[dbFieldMap[k]] || 0); });
+    });
 
-    const actualKPI = calculateKPI(accumulatedSales);
-    const forecastKPI = calculateKPI(forecastSales);
+    // Calculate Forecast
+    let forecastSales = {};
+    Object.keys(accSales).forEach(k => {
+      forecastSales[k] = Math.round((accSales[k] / periodInfo.elapsedDays) * periodInfo.totalDays);
+    });
 
-    document.getElementById('kpi-actual').innerText = actualKPI.toFixed(2);
-    document.getElementById('kpi-forecast').innerText = forecastKPI.toFixed(2);
+    document.getElementById('kpi-actual').innerText = calculateKPI(accSales).toFixed(2);
+    document.getElementById('kpi-forecast').innerText = calculateKPI(forecastSales).toFixed(2);
 
-    // Main Metrics
+    // Main Metrics Render
     const mainKeys = ['sim', 'subscriptions', 'merch', 'accessories', 'finServices'];
     const mainList = document.getElementById('main-metrics-list');
     mainList.innerHTML = '';
 
     mainKeys.forEach(key => {
-      const periodPlan = activePeriod.plans[key];
-      const dailyPlan = Math.ceil(periodPlan / periodInfo.totalDays);
-      const todayVal = todaySales[key];
-      const accVal = accumulatedSales[key];
-      const fcVal = forecastSales[key];
-      const pctForecast = Math.round((fcVal / periodPlan) * 100);
+      const plan = activePeriod.plans[key];
+      const acc = accSales[key];
+      const fc = forecastSales[key];
+      const pctForecast = Math.round((fc / plan) * 100);
 
       mainList.innerHTML += `
         <div class="metric-card-full">
           <div class="metric-head">
             <span>${metricLabels[key]}</span>
-            <span class="${pctForecast >= 100 ? 'text-success' : 'text-warning'}">
-              Прогноз: ${pctForecast}%
-            </span>
+            <span class="${pctForecast >= 100 ? 'text-success' : 'text-warning'}">Прогноз: ${pctForecast}%</span>
           </div>
           <div class="metric-row">
-            <div>
-              <div class="metric-col-title">Сегодня (Факт/План)</div>
-              <strong>${todayVal}</strong> / ${dailyPlan}
-            </div>
-            <div>
-              <div class="metric-col-title">Накоплено за период</div>
-              <strong>${accVal}</strong> / ${periodPlan}
-            </div>
-            <div>
-              <div class="metric-col-title">Прогноз на конец</div>
-              <strong style="color:var(--primary);">${fcVal}</strong>
-            </div>
-          </div>
-        </div>
-      `;
-    });
-
-    // Extra Metrics
-    const extraKeys = ['adapter', 'bankCard', 'homeInternet'];
-    const extraList = document.getElementById('extra-metrics-list');
-    extraList.innerHTML = '';
-
-    extraKeys.forEach(key => {
-      const periodPlan = activePeriod.plans[key];
-      const dailyPlan = Math.ceil(periodPlan / periodInfo.totalDays);
-      const todayVal = todaySales[key];
-      const accVal = accumulatedSales[key];
-      const fcVal = forecastSales[key];
-      const pctForecast = Math.round((fcVal / periodPlan) * 100);
-
-      extraList.innerHTML += `
-        <div class="metric-card-full">
-          <div class="metric-head">
-            <span>${metricLabels[key]}</span>
-            <span class="text-success">Прогноз: ${pctForecast}%</span>
-          </div>
-          <div class="metric-row">
-            <div>
-              <div class="metric-col-title">Сегодня</div>
-              <strong>${todayVal}</strong> / ${dailyPlan}
-            </div>
-            <div>
-              <div class="metric-col-title">Накоплено за период</div>
-              <strong>${accVal}</strong> / ${periodPlan}
-            </div>
-            <div>
-              <div class="metric-col-title">Прогноз на конец</div>
-              <strong>${fcVal}</strong>
-            </div>
+            <div><div class="metric-col-title">День план</div><strong>${Math.ceil(plan / periodInfo.totalDays)}</strong></div>
+            <div><div class="metric-col-title">Факт накоплен</div><strong>${acc}</strong> / ${plan}</div>
+            <div><div class="metric-col-title">Прогноз</div><strong style="color:var(--primary);">${fc}</strong></div>
           </div>
         </div>
       `;
     });
   }
 
-  // --- ADMIN EDIT PERIOD & PLANS ---
-  function openEditPeriodModal() {
-    document.getElementById('edit-period-start').value = activePeriod.startDate;
-    document.getElementById('edit-period-end').value = activePeriod.endDate;
-
-    const container = document.getElementById('period-plans-inputs-container');
+  // --- SAVE SALES TO SUPABASE ---
+  function openSalesModal() {
+    document.getElementById('input-sale-date').value = getTodayStr();
+    const container = document.getElementById('sales-inputs-container');
     container.innerHTML = '';
 
     Object.keys(metricLabels).forEach(key => {
-      container.innerHTML += `
-        <div class="input-group">
-          <label>${metricLabels[key]}</label>
-          <input type="number" id="edit-plan-${key}" value="${activePeriod.plans[key]}">
-        </div>
-      `;
+      container.innerHTML += `<div class="input-group"><label>${metricLabels[key]}</label><input type="number" id="input-sale-${key}" value="0"></div>`;
     });
-
-    document.getElementById('modal-edit-period').style.display = 'flex';
+    document.getElementById('modal-sales').style.display = 'flex';
   }
 
-  function savePeriodAndPlans() {
-    const start = document.getElementById('edit-period-start').value;
-    const end = document.getElementById('edit-period-end').value;
+  async function saveSales() {
+    const dateVal = document.getElementById('input-sale-date').value;
+    if (!dateVal) return alert('Укажите дату');
 
-    if (!start || !end) return alert('Укажите обе даты!');
-    if (new Date(start) > new Date(end)) return alert('Дата начала не может быть позже даты окончания!');
-
-    activePeriod.startDate = start;
-    activePeriod.endDate = end;
-
+    let payload = { user_id: currentUser.id, date: dateVal };
     Object.keys(metricLabels).forEach(key => {
-      const val = parseFloat(document.getElementById(`edit-plan-${key}`).value) || 0;
-      activePeriod.plans[key] = val;
+      payload[dbFieldMap[key]] = parseFloat(document.getElementById(`input-sale-${key}`).value) || 0;
     });
 
-    closeModal('modal-edit-period');
-    renderDashboard();
+    await _supabase.from('sales_records').insert([payload]);
+    closeModal('modal-sales');
+    await loadDataFromSupabase();
   }
 
-  // --- PROFILE & HISTORY ---
+  // --- PROFILE HISTORY ---
   function renderProfileHistory() {
     const list = document.getElementById('profile-history-list');
     list.innerHTML = '';
 
-    if (currentUser.isAdmin) {
-      const filterSelect = document.getElementById('admin-user-filter');
-      const uniqueUsers = [...new Set(salesHistory.map(r => r.userId))];
-      filterSelect.innerHTML = '<option value="all">Все сотрудники</option>';
-      uniqueUsers.forEach(u => filterSelect.innerHTML += `<option value="${u}">${u}</option>`);
-    }
+    let records = currentUser.isAdmin ? salesHistory : salesHistory.filter(r => r.user_id === currentUser.id);
+    if (records.length === 0) { list.innerHTML = '<p style="font-size:0.8rem; color:var(--text-muted);">Записей нет</p>'; return; }
 
-    let recordsToDisplay = currentUser.isAdmin
-      ? (document.getElementById('admin-user-filter').value === 'all' ? salesHistory : salesHistory.filter(r => r.userId === document.getElementById('admin-user-filter').value))
-      : salesHistory.filter(r => r.userId === currentUser.id);
-
-    if (recordsToDisplay.length === 0) {
-      list.innerHTML = '<p style="color:var(--text-muted); font-size:0.85rem;">Записей о продажах не найдено</p>';
-      return;
-    }
-
-    recordsToDisplay.sort((a,b) => new Date(b.date) - new Date(a.date));
-
-    recordsToDisplay.forEach(record => {
+    records.forEach(r => {
       list.innerHTML += `
         <div class="item-card">
           <div class="item-header">
-            <div>
-              <div class="item-title">Дата: ${record.date}</div>
-              <div class="item-sub">Сотрудник: ${record.userId}</div>
-            </div>
-            <div>
-              <button class="btn btn-small btn-secondary" onclick="openSalesModal(${record.id})">✏️ Edit</button>
-              <button class="btn btn-small btn-danger-outline" onclick="deleteSalesRecord(${record.id})">🗑️</button>
-            </div>
+            <div><strong>${r.date}</strong> (Таб: ${r.user_id})</div>
+            <button class="btn btn-small btn-danger-outline" onclick="deleteRecord(${r.id})">🗑️</button>
           </div>
-          <div class="history-details">
-            <div>СИМ: ${record.sim}</div>
-            <div>Абонементы: ${record.subscriptions}</div>
-            <div>Товарка: ${record.merch}р</div>
-            <div>Аксы: ${record.accessories}р</div>
-            <div>Фин услуги: ${record.finServices}р</div>
-            <div>Адаптер: ${record.adapter}</div>
-            <div>Банк карта: ${record.bankCard}</div>
-            <div>Дом инет: ${record.homeInternet}</div>
+          <div style="font-size:0.75rem; color:var(--text-muted);">
+            СИМ: ${r.sim} | Абонементы: ${r.subscriptions} | Товарка: ${r.merch}р | Аксы: ${r.accessories}р
           </div>
         </div>
       `;
     });
   }
 
-  // --- SALES INPUT MODAL ---
-  function openSalesModal(editId = null) {
-    const container = document.getElementById('sales-inputs-container');
-    container.innerHTML = '';
-
-    let record = {
-      date: getTodayStr(),
-      sim: 0, subscriptions: 0, merch: 0, accessories: 0, finServices: 0, adapter: 0, bankCard: 0, homeInternet: 0
-    };
-
-    if (editId) {
-      const existing = salesHistory.find(r => r.id === editId);
-      if (existing) record = { ...existing };
-      document.getElementById('modal-sales-title').innerText = 'Редактировать запись';
-      document.getElementById('editing-sales-id').value = editId;
-    } else {
-      document.getElementById('modal-sales-title').innerText = 'Внести продажи за день';
-      document.getElementById('editing-sales-id').value = '';
-    }
-
-    document.getElementById('input-sale-date').value = record.date;
-
-    Object.keys(metricLabels).forEach(key => {
-      container.innerHTML += `
-        <div class="input-group">
-          <label>${metricLabels[key]}</label>
-          <input type="number" id="input-sale-${key}" value="${record[key] || 0}">
-        </div>
-      `;
-    });
-
-    document.getElementById('modal-sales').style.display = 'flex';
-  }
-
-  function saveSales() {
-    const editId = document.getElementById('editing-sales-id').value;
-    const dateVal = document.getElementById('input-sale-date').value;
-
-    if (!dateVal) return alert('Выберите дату');
-
-    let recordData = {
-      date: dateVal,
-      userId: editId ? salesHistory.find(r => r.id == editId).userId : currentUser.id
-    };
-
-    Object.keys(metricLabels).forEach(key => {
-      recordData[key] = parseFloat(document.getElementById(`input-sale-${key}`).value) || 0;
-    });
-
-    if (editId) {
-      const index = salesHistory.findIndex(r => r.id == editId);
-      if (index !== -1) salesHistory[index] = { ...salesHistory[index], ...recordData };
-    } else {
-      recordData.id = Date.now();
-      salesHistory.push(recordData);
-    }
-
-    closeModal('modal-sales');
-    renderDashboard();
-    renderProfileHistory();
-  }
-
-  function deleteSalesRecord(id) {
+  async function deleteRecord(id) {
     if (confirm('Удалить эту запись?')) {
-      salesHistory = salesHistory.filter(r => r.id !== id);
-      renderDashboard();
-      renderProfileHistory();
+      await _supabase.from('sales_records').delete().eq('id', id);
+      await loadDataFromSupabase();
     }
   }
 
-  // --- TASKS ---
+  // --- TASKS SYSTEM ---
   function renderTasks() {
     const container = document.getElementById('tasks-container');
     container.innerHTML = '';
 
     tasks.forEach(task => {
+      const prog = userTaskProgress[task.id] || { completed: false, current_val: 0 };
       let actionHTML = task.type === 'checkbox'
-        ? `<input type="checkbox" style="width:22px; height:22px; accent-color:var(--primary);" ${task.completed ? 'checked' : ''} onchange="toggleTask(${task.id})">`
-        : `<div style="text-align: right;">
-            <input type="number" style="width: 60px; padding: 4px 8px; text-align: center;" value="${task.current}" onchange="updateNumericTask(${task.id}, this.value)">
-            <span style="font-size:0.8rem; color:var(--text-muted);">/ ${task.target}</span>
-           </div>`;
+        ? `<input type="checkbox" style="width:22px; height:22px;" ${prog.completed ? 'checked' : ''} onchange="toggleTask(${task.id}, this.checked)">`
+        : `<input type="number" style="width:60px; padding:4px;" value="${prog.current_val}" onchange="updateNumericTask(${task.id}, this.value, ${task.target})"> / ${task.target}`;
 
       container.innerHTML += `
         <div class="item-card" style="display:flex; justify-content:space-between; align-items:center;">
           <div>
-            <h4 style="${task.completed ? 'text-decoration: line-through; opacity: 0.6;' : ''}">${task.title}</h4>
-            <p class="item-sub">Срок: ${task.date || 'Не указан'}</p>
+            <h4 style="${prog.completed ? 'text-decoration:line-through; opacity:0.6;' : ''}">${task.title}</h4>
+            <p style="font-size:0.75rem; color:var(--text-muted);">Срок: ${task.date || 'Не указан'}</p>
           </div>
           ${actionHTML}
         </div>
@@ -788,76 +507,85 @@
     });
   }
 
-  function toggleTask(id) {
-    const task = tasks.find(t => t.id === id);
-    if (task) {
-      task.completed = !task.completed;
-      renderTasks();
-      if (currentUser.isAdmin) renderAdminPanel();
-    }
+  async function toggleTask(taskId, isCompleted) {
+    await _supabase.from('user_task_progress').upsert({
+      user_id: currentUser.id,
+      task_id: taskId,
+      completed: isCompleted
+    });
+    await loadDataFromSupabase();
   }
 
-  function updateNumericTask(id, val) {
-    const task = tasks.find(t => t.id === id);
-    if (task) {
-      task.current = parseInt(val) || 0;
-      task.completed = task.current >= task.target;
-      renderTasks();
-      if (currentUser.isAdmin) renderAdminPanel();
-    }
+  async function updateNumericTask(taskId, val, target) {
+    const currentVal = parseInt(val) || 0;
+    await _supabase.from('user_task_progress').upsert({
+      user_id: currentUser.id,
+      task_id: taskId,
+      current_val: currentVal,
+      completed: currentVal >= target
+    });
+    await loadDataFromSupabase();
   }
 
   // --- ADMIN PANEL ---
   function renderAdminPanel() {
     const container = document.getElementById('admin-tasks-monitor');
     container.innerHTML = '';
-
-    tasks.forEach(task => {
-      let statusText = task.completed ? '✅ Выполнено' : '❌ В процессе';
-      let progress = task.type === 'numeric' ? `(${task.current}/${task.target})` : '';
-
+    tasks.forEach(t => {
       container.innerHTML += `
-        <div class="item-card" style="display:flex; justify-content:space-between; align-items:center;">
-          <div>
-            <h4>${task.title} ${progress}</h4>
-            <p class="item-sub">Статус: ${statusText}</p>
-          </div>
-          <button style="background:none; border:none; color:var(--danger); cursor:pointer;" onclick="deleteTask(${task.id})">🗑️</button>
+        <div class="item-card" style="display:flex; justify-content:space-between;">
+          <div><strong>${t.title}</strong> (${t.type})</div>
+          <button style="background:none; border:none; color:var(--danger);" onclick="deleteTask(${t.id})">🗑️</button>
         </div>
       `;
     });
   }
 
-  function openTaskCreateModal() { document.getElementById('modal-add-task').style.display = 'flex'; }
-  function toggleTaskTypeInput() {
-    document.getElementById('task-target-group').style.display = document.getElementById('new-task-type').value === 'numeric' ? 'block' : 'none';
+  function openEditPeriodModal() {
+    document.getElementById('edit-period-start').value = activePeriod?.startDate || getTodayStr();
+    document.getElementById('edit-period-end').value = activePeriod?.endDate || getTodayStr();
+
+    const container = document.getElementById('period-plans-inputs-container');
+    container.innerHTML = '';
+    Object.keys(metricLabels).forEach(key => {
+      container.innerHTML += `<div class="input-group"><label>${metricLabels[key]}</label><input type="number" id="edit-plan-${key}" value="${activePeriod?.plans[key] || 0}"></div>`;
+    });
+    document.getElementById('modal-edit-period').style.display = 'flex';
   }
 
-  function createNewTask() {
+  async function savePeriodAndPlans() {
+    const start = document.getElementById('edit-period-start').value;
+    const end = document.getElementById('edit-period-end').value;
+
+    let plansObj = {};
+    Object.keys(metricLabels).forEach(key => {
+      plansObj[key] = parseFloat(document.getElementById(`edit-plan-${key}`).value) || 0;
+    });
+
+    await _supabase.from('active_periods').update({ is_active: false }).neq('id', '00000000-0000-0000-0000-000000000000');
+    await _supabase.from('active_periods').insert([{ start_date: start, end_date: end, plans: plansObj, is_active: true }]);
+
+    closeModal('modal-edit-period');
+    await loadDataFromSupabase();
+  }
+
+  function openTaskCreateModal() { document.getElementById('modal-add-task').style.display = 'flex'; }
+  async function createNewTask() {
     const title = document.getElementById('new-task-title').value;
     const type = document.getElementById('new-task-type').value;
     const target = parseInt(document.getElementById('new-task-target').value) || 0;
     const date = document.getElementById('new-task-date').value;
 
-    if (!title) return alert('Введите название задачи');
-
-    tasks.push({
-      id: Date.now(), title, type, completed: false, date,
-      ...(type === 'numeric' ? { current: 0, target } : {})
-    });
-
+    await _supabase.from('tasks').insert([{ title, type, target, date }]);
     closeModal('modal-add-task');
-    renderTasks();
-    renderAdminPanel();
-
-    document.getElementById('new-task-title').value = '';
-    document.getElementById('new-task-target').value = '';
+    await loadDataFromSupabase();
   }
 
-  function deleteTask(id) {
-    tasks = tasks.filter(t => t.id !== id);
-    renderTasks();
-    renderAdminPanel();
+  async function deleteTask(id) {
+    if (confirm('Удалить задачу?')) {
+      await _supabase.from('tasks').delete().eq('id', id);
+      await loadDataFromSupabase();
+    }
   }
 
   function closeModal(id) { document.getElementById(id).style.display = 'none'; }
