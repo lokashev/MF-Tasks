@@ -5,14 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <title>Sales & Task Manager PWA</title>
 
-  <!-- PWA Settings -->
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#6366f1">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <!-- Supabase JS Client -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <style>
@@ -41,7 +38,7 @@
       padding: 16px 20px; background: var(--card-bg); backdrop-filter: blur(12px);
       border-bottom: 1px solid var(--card-border); display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 10;
     }
-    header h1 { font-size: 1.1rem; font-weight: 700; color: #fff; }
+    header h1 { font-size: 1rem; font-weight: 700; color: #fff; }
     .user-badge { font-size: 0.75rem; background: rgba(99, 102, 241, 0.2); color: #818cf8; padding: 4px 10px; border-radius: 20px; border: 1px solid rgba(99, 102, 241, 0.3); }
 
     .view { display: none; padding: 20px; padding-bottom: 90px; flex: 1; }
@@ -49,19 +46,33 @@
 
     #login-screen { display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 30px; text-align: center; min-height: 100vh; }
     .login-box { width: 100%; background: var(--card-bg); padding: 30px 20px; border-radius: 24px; border: 1px solid var(--card-border); backdrop-filter: blur(10px); }
-    .login-box h2 { font-size: 1.5rem; margin-bottom: 8px; }
-
+    
     .input-group { margin-bottom: 14px; text-align: left; }
     .input-group label { display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 6px; }
     input, select { width: 100%; padding: 12px 16px; background: rgba(15, 23, 42, 0.6); border: 1px solid var(--card-border); border-radius: 12px; color: #fff; font-size: 0.95rem; outline: none; }
     
     .btn { width: 100%; padding: 14px; border: none; border-radius: 12px; background: var(--primary); color: #fff; font-weight: 600; font-size: 0.95rem; cursor: pointer; }
+    .btn:hover { background: var(--primary-hover); }
     .btn-secondary { background: rgba(255, 255, 255, 0.1); color: #fff; margin-top: 8px; }
     .btn-danger-outline { background: transparent; border: 1px solid var(--danger); color: #f87171; }
-    .btn-small { padding: 6px 12px; font-size: 0.75rem; border-radius: 8px; width: auto; }
+    .btn-small { padding: 6px 10px; font-size: 0.75rem; border-radius: 8px; width: auto; border: 1px solid var(--card-border); }
 
     .card { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 16px; padding: 16px; margin-bottom: 16px; backdrop-filter: blur(10px); }
     .card-title { font-size: 0.9rem; font-weight: 600; color: var(--text-muted); margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
+
+    /* Admin Action Cards (Plans & Employees) */
+    .admin-card {
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 14px;
+      padding: 14px;
+      margin-bottom: 12px;
+    }
+    .admin-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+    .admin-card-actions { display: flex; gap: 6px; }
+    .badge-status { font-size: 0.7rem; padding: 3px 8px; border-radius: 10px; font-weight: 600; }
+    .badge-active { background: rgba(16, 185, 129, 0.2); color: var(--accent); border: 1px solid rgba(16, 185, 129, 0.3); }
+    .badge-inactive { background: rgba(148, 163, 184, 0.1); color: var(--text-muted); }
 
     .kpi-banner { background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%); border-radius: 20px; padding: 18px; color: #fff; margin-bottom: 20px; }
     .kpi-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; border-top: 1px solid rgba(255,255,255,0.2); padding-top: 12px; margin-top: 10px; }
@@ -77,7 +88,6 @@
     .text-danger { color: var(--danger); }
 
     .item-card { background: rgba(15, 23, 42, 0.4); border-radius: 12px; padding: 12px; margin-bottom: 10px; border: 1px solid rgba(255, 255, 255, 0.05); }
-    .item-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
 
     .nav-bar { position: absolute; bottom: 0; width: 100%; height: 70px; background: rgba(15, 23, 42, 0.9); backdrop-filter: blur(16px); border-top: 1px solid var(--card-border); display: flex; justify-content: space-around; align-items: center; z-index: 10; }
     .nav-item { display: flex; flex-direction: column; align-items: center; color: var(--text-muted); font-size: 0.7rem; cursor: pointer; gap: 4px; }
@@ -97,16 +107,17 @@
       <h2>Sales & Tasks</h2>
       <p style="color:var(--text-muted); font-size:0.85rem; margin-bottom:20px;">Введите 8-значный табельный номер</p>
       <div class="input-group">
-        <input type="number" id="login-id" placeholder="12345678" oninput="if(this.value.length > 8) this.value = this.value.slice(0,8);">
+        <input type="number" id="login-id" placeholder="Например: 12345678" oninput="if(this.value.length > 8) this.value = this.value.slice(0,8);">
       </div>
-      <button class="btn" onclick="login()">Войти</button>
+      <button class="btn" onclick="login()">Войти в систему</button>
+      <p style="margin-top: 15px; font-size: 0.75rem; color: #64748b;">Админ: 88888888 | Сотрудники заведены в БД</p>
     </div>
   </div>
 
   <!-- MAIN APP -->
   <div id="app" style="display: none; flex-direction: column; flex: 1;">
     <header>
-      <h1>Sales & Task Manager</h1>
+      <h1>Sales Manager</h1>
       <div class="user-badge" id="user-display">Таб: -</div>
     </header>
 
@@ -158,7 +169,8 @@
       <div class="card">
         <div class="card-title">Профиль сотрудника</div>
         <div style="margin-bottom: 12px; font-size: 0.9rem;">
-          <div><strong>Табельный номер:</strong> <span id="profile-user-id" style="color: var(--primary);">-</span></div>
+          <div><strong>ФИО:</strong> <span id="profile-user-name" style="color: var(--primary); font-weight:600;">-</span></div>
+          <div><strong>Табельный:</strong> <span id="profile-user-id" style="color: var(--text-muted);">-</span></div>
           <div><strong>Роль:</strong> <span id="profile-user-role" style="color: var(--text-muted);">-</span></div>
         </div>
         <button class="btn btn-danger-outline" onclick="logout()">🚪 Выйти из аккаунта</button>
@@ -177,14 +189,31 @@
 
     <!-- TAB 4: ADMIN -->
     <div id="tab-admin" class="view">
+      <!-- Employees Management Card Section -->
       <div class="card">
-        <div class="card-title">Управление периодом и планами</div>
-        <button class="btn" onclick="openEditPeriodModal()">⚙️ Настроить период и планы</button>
+        <div class="card-title">
+          <span>Сотрудники</span>
+          <button class="btn btn-small" style="background:var(--primary);" onclick="openEmployeeModal()">+ Добавить</button>
+        </div>
+        <div id="admin-employees-list">Загрузка сотрудников...</div>
       </div>
+
+      <!-- Periods/Plans Management Cards Section -->
       <div class="card">
-        <div class="card-title">Управление задачами</div>
-        <button class="btn btn-secondary" onclick="openTaskCreateModal()">+ Создать задачу</button>
-        <div id="admin-tasks-monitor" style="margin-top:14px;"></div>
+        <div class="card-title">
+          <span>Периоды и Планы</span>
+          <button class="btn btn-small" style="background:var(--primary);" onclick="openPeriodModal()">+ Создать план</button>
+        </div>
+        <div id="admin-periods-list">Загрузка планов...</div>
+      </div>
+
+      <!-- Tasks Management Section -->
+      <div class="card">
+        <div class="card-title">
+          <span>Задачи</span>
+          <button class="btn btn-small btn-secondary" style="margin:0;" onclick="openTaskCreateModal()">+ Создать задачу</button>
+        </div>
+        <div id="admin-tasks-monitor" style="margin-top:10px;"></div>
       </div>
     </div>
 
@@ -198,7 +227,7 @@
   </div>
 </div>
 
-<!-- MODAL SALES -->
+<!-- MODAL: SALES -->
 <div class="modal" id="modal-sales">
   <div class="modal-content">
     <h3 style="margin-bottom: 16px;" id="modal-sales-title">Внести продажи за день</h3>
@@ -213,21 +242,52 @@
   </div>
 </div>
 
-<!-- MODAL ADMIN PERIOD -->
-<div class="modal" id="modal-edit-period">
+<!-- MODAL: EMPLOYEE (Add / Edit) -->
+<div class="modal" id="modal-employee">
   <div class="modal-content">
-    <h3 style="margin-bottom: 16px;">Период и Планы</h3>
+    <h3 style="margin-bottom: 16px;" id="modal-employee-title">Добавить сотрудника</h3>
+    <input type="hidden" id="editing-employee-original-id" value="">
+    <div class="input-group">
+      <label>Табельный номер (8 цифр)</label>
+      <input type="number" id="emp-tab-number" placeholder="12345678" oninput="if(this.value.length > 8) this.value = this.value.slice(0,8);">
+    </div>
+    <div class="input-group">
+      <label>ФИО сотрудника</label>
+      <input type="text" id="emp-name" placeholder="Иванов Иван">
+    </div>
+    <div class="input-group">
+      <label>Роль</label>
+      <select id="emp-role">
+        <option value="employee">Сотрудник</option>
+        <option value="admin">Администратор</option>
+      </select>
+    </div>
+    <button class="btn" onclick="saveEmployee()">Сохранить сотрудника</button>
+    <button class="btn btn-secondary" onclick="closeModal('modal-employee')">Отмена</button>
+  </div>
+</div>
+
+<!-- MODAL: PERIOD & PLANS (Add / Edit Card) -->
+<div class="modal" id="modal-period">
+  <div class="modal-content">
+    <h3 style="margin-bottom: 16px;" id="modal-period-title">Создать план</h3>
+    <input type="hidden" id="editing-period-id" value="">
+    <div class="input-group">
+      <label>Название периода</label>
+      <input type="text" id="edit-period-title" placeholder="Например: Первая неделя">
+    </div>
     <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
       <div class="input-group"><label>Дата начала</label><input type="date" id="edit-period-start"></div>
       <div class="input-group"><label>Дата окончания</label><input type="date" id="edit-period-end"></div>
     </div>
+    <h4 style="margin: 10px 0; font-size: 0.85rem; color: var(--text-muted);">Целевые показатели на этот период:</h4>
     <div id="period-plans-inputs-container"></div>
-    <button class="btn" onclick="savePeriodAndPlans()">Сохранить в БД</button>
-    <button class="btn btn-secondary" onclick="closeModal('modal-edit-period')">Отмена</button>
+    <button class="btn" onclick="savePeriodAndPlans()">Сохранить план</button>
+    <button class="btn btn-secondary" onclick="closeModal('modal-period')">Отмена</button>
   </div>
 </div>
 
-<!-- MODAL ADD TASK -->
+<!-- MODAL: ADD TASK -->
 <div class="modal" id="modal-add-task">
   <div class="modal-content">
     <h3>Создать задачу</h3>
@@ -246,20 +306,16 @@
 </div>
 
 <script>
-  // --- SUPABASE INITIALIZATION ---
+  // --- SUPABASE CONFIG ---
   const SUPABASE_URL = 'https://icuwdhqcdobevgmhlhod.supabase.co';
   const SUPABASE_ANON_KEY = 'sb_publishable_vmARBTTLeCypr0mNcLWJ_w_VSImIwoD';
   const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-  // Register PWA Service Worker
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('sw.js').catch(console.error);
-  }
-
   // APP STATE
-  let currentUser = null;
-  const ADMIN_ID = '88888888';
+  let currentUser = null; // { tab_number, name, role }
   let activePeriod = null;
+  let allPeriods = [];
+  let employeesList = [];
   let salesHistory = [];
   let tasks = [];
   let userTaskProgress = {};
@@ -277,21 +333,39 @@
 
   const getTodayStr = () => new Date().toISOString().split('T')[0];
 
+  // --- AUTHENTICATION ---
   async function login() {
     const idInput = document.getElementById('login-id').value;
     if (idInput.length !== 8) return alert('Табельный номер должен состоять ровно из 8 цифр!');
 
-    currentUser = { id: idInput, isAdmin: idInput === ADMIN_ID };
+    // Check employee in DB
+    const { data: emp, error } = await _supabase.from('employees').select('*').eq('tab_number', idInput).single();
+
+    if (error || !emp) {
+      alert('Сотрудник с таким табельным номером не найден в базе данных!');
+      return;
+    }
+
+    currentUser = {
+      tab_number: emp.tab_number,
+      name: emp.name,
+      role: emp.role,
+      isAdmin: emp.role === 'admin'
+    };
 
     document.getElementById('login-screen').style.display = 'none';
     document.getElementById('app').style.display = 'flex';
-    document.getElementById('user-display').innerText = `Таб: ${currentUser.id} ${currentUser.isAdmin ? '(Админ)' : ''}`;
-    document.getElementById('profile-user-id').innerText = currentUser.id;
+    document.getElementById('user-display').innerText = `${currentUser.name} (Таб: ${currentUser.tab_number})`;
+    document.getElementById('profile-user-name').innerText = currentUser.name;
+    document.getElementById('profile-user-id').innerText = currentUser.tab_number;
     document.getElementById('profile-user-role').innerText = currentUser.isAdmin ? 'Администратор' : 'Сотрудник';
 
     if (currentUser.isAdmin) {
       document.getElementById('admin-nav-item').style.display = 'flex';
       document.getElementById('admin-user-filter').style.display = 'inline-block';
+    } else {
+      document.getElementById('admin-nav-item').style.display = 'none';
+      document.getElementById('admin-user-filter').style.display = 'none';
     }
 
     await loadDataFromSupabase();
@@ -301,6 +375,8 @@
     currentUser = null;
     document.getElementById('app').style.display = 'none';
     document.getElementById('login-screen').style.display = 'flex';
+    document.getElementById('login-id').value = '';
+    switchTab('sales', document.querySelectorAll('.nav-item')[0]);
   }
 
   function switchTab(tabName, element) {
@@ -310,28 +386,26 @@
     element.classList.add('active');
   }
 
-  // --- SUPABASE DATA SYNC ---
+  // --- DATA LOADING & CALCULATIONS ---
   async function loadDataFromSupabase() {
-    // 1. Fetch active period & plans
-    const { data: periodData } = await _supabase.from('active_periods').select('*').eq('is_active', true).single();
-    if (periodData) {
-      activePeriod = {
-        startDate: periodData.start_date,
-        endDate: periodData.end_date,
-        plans: periodData.plans
-      };
-    }
+    // 1. Employees
+    const { data: empData } = await _supabase.from('employees').select('*').order('name');
+    employeesList = empData || [];
 
-    // 2. Fetch sales records
+    // 2. Periods / Plans
+    const { data: periodData } = await _supabase.from('active_periods').select('*').order('created_at', { ascending: false });
+    allPeriods = periodData || [];
+    activePeriod = allPeriods.find(p => p.is_active) || allPeriods[0] || null;
+
+    // 3. Sales
     const { data: salesData } = await _supabase.from('sales_records').select('*');
     salesHistory = salesData || [];
 
-    // 3. Fetch tasks
+    // 4. Tasks & Progress
     const { data: tasksData } = await _supabase.from('tasks').select('*');
     tasks = tasksData || [];
 
-    // 4. Fetch User task progress
-    const { data: progressData } = await _supabase.from('user_task_progress').select('*').eq('user_id', currentUser.id);
+    const { data: progressData } = await _supabase.from('user_task_progress').select('*').eq('user_id', currentUser.tab_number);
     userTaskProgress = {};
     (progressData || []).forEach(p => { userTaskProgress[p.task_id] = p; });
 
@@ -343,8 +417,8 @@
 
   function getPeriodDetails() {
     if (!activePeriod) return { totalDays: 1, elapsedDays: 1, startFormatted: '', endFormatted: '' };
-    const start = new Date(activePeriod.startDate);
-    const end = new Date(activePeriod.endDate);
+    const start = new Date(activePeriod.start_date);
+    const end = new Date(activePeriod.end_date);
     const today = new Date();
 
     start.setHours(0,0,0,0); end.setHours(0,0,0,0); today.setHours(0,0,0,0);
@@ -354,17 +428,17 @@
     if (elapsedDays < 1) elapsedDays = 1;
     if (elapsedDays > totalDays) elapsedDays = totalDays;
 
-    return { totalDays, elapsedDays, startFormatted: activePeriod.startDate, endFormatted: activePeriod.endDate };
+    return { totalDays, elapsedDays, startFormatted: activePeriod.start_date, endFormatted: activePeriod.end_date };
   }
 
   function calculateKPI(salesMap) {
-    if (!activePeriod) return 0;
+    if (!activePeriod || !activePeriod.plans) return 0;
     const mainKeys = ['sim', 'subscriptions', 'merch', 'accessories', 'finServices'];
     let percentages = [];
     let allOver150 = true;
 
     mainKeys.forEach(key => {
-      let pct = (salesMap[key] / activePeriod.plans[key]) * 100;
+      let pct = (salesMap[key] / (activePeriod.plans[key] || 1)) * 100;
       if (pct < 150) allOver150 = false;
       if (pct < 70) pct = 0;
       percentages.push(pct);
@@ -379,20 +453,21 @@
   }
 
   function renderDashboard() {
-    if (!activePeriod) return;
+    if (!activePeriod) {
+      document.getElementById('main-metrics-list').innerHTML = 'Планы не настроены. Обратитесь к администратору.';
+      return;
+    }
     const periodInfo = getPeriodDetails();
 
-    document.getElementById('period-dates-display').innerText = `${periodInfo.startFormatted} — ${periodInfo.endFormatted}`;
+    document.getElementById('period-dates-display').innerText = `${activePeriod.title || 'Период'}: ${periodInfo.startFormatted} — ${periodInfo.endFormatted}`;
     document.getElementById('week-day-tag').innerText = `День ${periodInfo.elapsedDays} из ${periodInfo.totalDays}`;
 
-    // Calculate Accumulated Sales for user
-    let userRecords = salesHistory.filter(r => r.user_id === currentUser.id);
+    let userRecords = salesHistory.filter(r => r.user_id === currentUser.tab_number);
     let accSales = { sim: 0, subscriptions: 0, merch: 0, accessories: 0, finServices: 0, adapter: 0, bankCard: 0, homeInternet: 0 };
     userRecords.forEach(r => {
       Object.keys(dbFieldMap).forEach(k => { accSales[k] += Number(r[dbFieldMap[k]] || 0); });
     });
 
-    // Calculate Forecast
     let forecastSales = {};
     Object.keys(accSales).forEach(k => {
       forecastSales[k] = Math.round((accSales[k] / periodInfo.elapsedDays) * periodInfo.totalDays);
@@ -401,16 +476,15 @@
     document.getElementById('kpi-actual').innerText = calculateKPI(accSales).toFixed(2);
     document.getElementById('kpi-forecast').innerText = calculateKPI(forecastSales).toFixed(2);
 
-    // Main Metrics Render
     const mainKeys = ['sim', 'subscriptions', 'merch', 'accessories', 'finServices'];
     const mainList = document.getElementById('main-metrics-list');
     mainList.innerHTML = '';
 
     mainKeys.forEach(key => {
-      const plan = activePeriod.plans[key];
+      const plan = activePeriod.plans[key] || 0;
       const acc = accSales[key];
       const fc = forecastSales[key];
-      const pctForecast = Math.round((fc / plan) * 100);
+      const pctForecast = Math.round((fc / (plan || 1)) * 100);
 
       mainList.innerHTML += `
         <div class="metric-card-full">
@@ -428,12 +502,11 @@
     });
   }
 
-  // --- SAVE SALES TO SUPABASE ---
+  // --- SALES ENTRY ---
   function openSalesModal() {
     document.getElementById('input-sale-date').value = getTodayStr();
     const container = document.getElementById('sales-inputs-container');
     container.innerHTML = '';
-
     Object.keys(metricLabels).forEach(key => {
       container.innerHTML += `<div class="input-group"><label>${metricLabels[key]}</label><input type="number" id="input-sale-${key}" value="0"></div>`;
     });
@@ -444,7 +517,7 @@
     const dateVal = document.getElementById('input-sale-date').value;
     if (!dateVal) return alert('Укажите дату');
 
-    let payload = { user_id: currentUser.id, date: dateVal };
+    let payload = { user_id: currentUser.tab_number, date: dateVal };
     Object.keys(metricLabels).forEach(key => {
       payload[dbFieldMap[key]] = parseFloat(document.getElementById(`input-sale-${key}`).value) || 0;
     });
@@ -454,20 +527,29 @@
     await loadDataFromSupabase();
   }
 
-  // --- PROFILE HISTORY ---
+  // --- PROFILE & HISTORY ---
   function renderProfileHistory() {
     const list = document.getElementById('profile-history-list');
     list.innerHTML = '';
 
-    let records = currentUser.isAdmin ? salesHistory : salesHistory.filter(r => r.user_id === currentUser.id);
-    if (records.length === 0) { list.innerHTML = '<p style="font-size:0.8rem; color:var(--text-muted);">Записей нет</p>'; return; }
+    if (currentUser.isAdmin) {
+      const filterSelect = document.getElementById('admin-user-filter');
+      filterSelect.innerHTML = '<option value="all">Все сотрудники</option>';
+      employeesList.forEach(u => filterSelect.innerHTML += `<option value="${u.tab_number}">${u.name} (${u.tab_number})</option>`);
+    }
+
+    let selectedFilter = currentUser.isAdmin ? document.getElementById('admin-user-filter').value : currentUser.tab_number;
+    let records = selectedFilter === 'all' ? salesHistory : salesHistory.filter(r => r.user_id === selectedFilter);
+
+    if (records.length === 0) { list.innerHTML = '<p style="font-size:0.8rem; color:var(--text-muted);">Записей не найдено</p>'; return; }
 
     records.forEach(r => {
+      const empName = employeesList.find(e => e.tab_number === r.user_id)?.name || r.user_id;
       list.innerHTML += `
         <div class="item-card">
           <div class="item-header">
-            <div><strong>${r.date}</strong> (Таб: ${r.user_id})</div>
-            <button class="btn btn-small btn-danger-outline" onclick="deleteRecord(${r.id})">🗑️</button>
+            <div><strong>${r.date}</strong> — ${empName}</div>
+            <button class="btn btn-small btn-danger-outline" onclick="deleteSalesRecord(${r.id})">🗑️</button>
           </div>
           <div style="font-size:0.75rem; color:var(--text-muted);">
             СИМ: ${r.sim} | Абонементы: ${r.subscriptions} | Товарка: ${r.merch}р | Аксы: ${r.accessories}р
@@ -477,14 +559,191 @@
     });
   }
 
-  async function deleteRecord(id) {
+  async function deleteSalesRecord(id) {
     if (confirm('Удалить эту запись?')) {
       await _supabase.from('sales_records').delete().eq('id', id);
       await loadDataFromSupabase();
     }
   }
 
-  // --- TASKS SYSTEM ---
+  // --- ADMIN PANEL: EMPLOYEES CARDS ---
+  function renderAdminPanel() {
+    // 1. Employees List Cards
+    const empContainer = document.getElementById('admin-employees-list');
+    empContainer.innerHTML = '';
+    employeesList.forEach(emp => {
+      empContainer.innerHTML += `
+        <div class="admin-card">
+          <div class="admin-card-header">
+            <div>
+              <strong>${emp.name}</strong>
+              <div style="font-size:0.75rem; color:var(--text-muted);">Табельный: ${emp.tab_number} | Роль: ${emp.role}</div>
+            </div>
+            <div class="admin-card-actions">
+              <button class="btn btn-small btn-secondary" onclick="openEmployeeModal('${emp.tab_number}')">✏️ Edit</button>
+              <button class="btn btn-small btn-danger-outline" onclick="deleteEmployee('${emp.tab_number}')">🗑️</button>
+            </div>
+          </div>
+        </div>
+      `;
+    });
+
+    // 2. Periods / Plans List Cards
+    const periodsContainer = document.getElementById('admin-periods-list');
+    periodsContainer.innerHTML = '';
+    allPeriods.forEach(p => {
+      periodsContainer.innerHTML += `
+        <div class="admin-card">
+          <div class="admin-card-header">
+            <div>
+              <strong>${p.title || 'Без названия'}</strong>
+              <span class="badge-status ${p.is_active ? 'badge-active' : 'badge-inactive'}">${p.is_active ? 'АКТИВЕН' : 'Неактивен'}</span>
+              <div style="font-size:0.75rem; color:var(--text-muted); margin-top:2px;">${p.start_date} — ${p.end_date}</div>
+            </div>
+            <div class="admin-card-actions">
+              ${!p.is_active ? `<button class="btn btn-small" style="background:var(--accent);" onclick="setActivePeriod(${p.id})">Активировать</button>` : ''}
+              <button class="btn btn-small btn-secondary" onclick="openPeriodModal(${p.id})">✏️ Edit</button>
+              <button class="btn btn-small btn-danger-outline" onclick="deletePeriod(${p.id})">🗑️</button>
+            </div>
+          </div>
+        </div>
+      `;
+    });
+
+    // 3. Tasks List
+    const tasksContainer = document.getElementById('admin-tasks-monitor');
+    tasksContainer.innerHTML = '';
+    tasks.forEach(t => {
+      tasksContainer.innerHTML += `
+        <div class="item-card" style="display:flex; justify-content:space-between; align-items:center;">
+          <div><strong>${t.title}</strong> (${t.type})</div>
+          <button style="background:none; border:none; color:var(--danger); cursor:pointer;" onclick="deleteTask(${t.id})">🗑️</button>
+        </div>
+      `;
+    });
+  }
+
+  // --- EMPLOYEE MODAL HANDLERS ---
+  function openEmployeeModal(tabNumber = null) {
+    if (tabNumber) {
+      const emp = employeesList.find(e => e.tab_number === tabNumber);
+      document.getElementById('modal-employee-title').innerText = 'Редактировать сотрудника';
+      document.getElementById('editing-employee-original-id').value = emp.tab_number;
+      document.getElementById('emp-tab-number').value = emp.tab_number;
+      document.getElementById('emp-name').value = emp.name;
+      document.getElementById('emp-role').value = emp.role;
+    } else {
+      document.getElementById('modal-employee-title').innerText = 'Добавить сотрудника';
+      document.getElementById('editing-employee-original-id').value = '';
+      document.getElementById('emp-tab-number').value = '';
+      document.getElementById('emp-name').value = '';
+      document.getElementById('emp-role').value = 'employee';
+    }
+    document.getElementById('modal-employee').style.display = 'flex';
+  }
+
+  async function saveEmployee() {
+    const origTab = document.getElementById('editing-employee-original-id').value;
+    const tabNumber = document.getElementById('emp-tab-number').value;
+    const name = document.getElementById('emp-name').value;
+    const role = document.getElementById('emp-role').value;
+
+    if (tabNumber.length !== 8 || !name) return alert('Введите корректные 8 цифр табельного и ФИО');
+
+    if (origTab) {
+      await _supabase.from('employees').update({ name, role }).eq('tab_number', origTab);
+    } else {
+      await _supabase.from('employees').insert([{ tab_number: tabNumber, name, role }]);
+    }
+
+    closeModal('modal-employee');
+    await loadDataFromSupabase();
+  }
+
+  async function deleteEmployee(tabNumber) {
+    if (confirm(`Удалить сотрудника ${tabNumber}?`)) {
+      await _supabase.from('employees').delete().eq('tab_number', tabNumber);
+      await loadDataFromSupabase();
+    }
+  }
+
+  // --- PERIOD & PLAN CARDS MODAL HANDLERS ---
+  function openPeriodModal(periodId = null) {
+    const container = document.getElementById('period-plans-inputs-container');
+    container.innerHTML = '';
+
+    let periodData = {
+      title: '',
+      start_date: getTodayStr(),
+      end_date: getTodayStr(),
+      plans: { sim: 35, subscriptions: 14, merch: 70000, accessories: 35000, finServices: 21000, adapter: 14, bankCard: 7, homeInternet: 7 }
+    };
+
+    if (periodId) {
+      const existing = allPeriods.find(p => p.id === periodId);
+      if (existing) periodData = existing;
+      document.getElementById('modal-period-title').innerText = 'Редактировать план';
+      document.getElementById('editing-period-id').value = periodId;
+    } else {
+      document.getElementById('modal-period-title').innerText = 'Создать новый план';
+      document.getElementById('editing-period-id').value = '';
+    }
+
+    document.getElementById('edit-period-title').value = periodData.title || '';
+    document.getElementById('edit-period-start').value = periodData.start_date;
+    document.getElementById('edit-period-end').value = periodData.end_date;
+
+    Object.keys(metricLabels).forEach(key => {
+      container.innerHTML += `
+        <div class="input-group">
+          <label>${metricLabels[key]}</label>
+          <input type="number" id="edit-plan-${key}" value="${periodData.plans[key] || 0}">
+        </div>
+      `;
+    });
+
+    document.getElementById('modal-period').style.display = 'flex';
+  }
+
+  async function savePeriodAndPlans() {
+    const periodId = document.getElementById('editing-period-id').value;
+    const title = document.getElementById('edit-period-title').value;
+    const start = document.getElementById('edit-period-start').value;
+    const end = document.getElementById('edit-period-end').value;
+
+    let plansObj = {};
+    Object.keys(metricLabels).forEach(key => {
+      plansObj[key] = parseFloat(document.getElementById(`edit-plan-${key}`).value) || 0;
+    });
+
+    const payload = { title, start_date: start, end_date: end, plans: plansObj };
+
+    if (periodId) {
+      await _supabase.from('active_periods').update(payload).eq('id', periodId);
+    } else {
+      payload.is_active = false;
+      await _supabase.from('active_periods').insert([payload]);
+    }
+
+    closeModal('modal-period');
+    await loadDataFromSupabase();
+  }
+
+  async function setActivePeriod(periodId) {
+    // Deactivate all, activate selected
+    await _supabase.from('active_periods').update({ is_active: false }).neq('id', 0);
+    await _supabase.from('active_periods').update({ is_active: true }).eq('id', periodId);
+    await loadDataFromSupabase();
+  }
+
+  async function deletePeriod(periodId) {
+    if (confirm('Удалить этот период и план?')) {
+      await _supabase.from('active_periods').delete().eq('id', periodId);
+      await loadDataFromSupabase();
+    }
+  }
+
+  // --- TASKS ---
   function renderTasks() {
     const container = document.getElementById('tasks-container');
     container.innerHTML = '';
@@ -508,64 +767,13 @@
   }
 
   async function toggleTask(taskId, isCompleted) {
-    await _supabase.from('user_task_progress').upsert({
-      user_id: currentUser.id,
-      task_id: taskId,
-      completed: isCompleted
-    });
+    await _supabase.from('user_task_progress').upsert({ user_id: currentUser.tab_number, task_id: taskId, completed: isCompleted });
     await loadDataFromSupabase();
   }
 
   async function updateNumericTask(taskId, val, target) {
     const currentVal = parseInt(val) || 0;
-    await _supabase.from('user_task_progress').upsert({
-      user_id: currentUser.id,
-      task_id: taskId,
-      current_val: currentVal,
-      completed: currentVal >= target
-    });
-    await loadDataFromSupabase();
-  }
-
-  // --- ADMIN PANEL ---
-  function renderAdminPanel() {
-    const container = document.getElementById('admin-tasks-monitor');
-    container.innerHTML = '';
-    tasks.forEach(t => {
-      container.innerHTML += `
-        <div class="item-card" style="display:flex; justify-content:space-between;">
-          <div><strong>${t.title}</strong> (${t.type})</div>
-          <button style="background:none; border:none; color:var(--danger);" onclick="deleteTask(${t.id})">🗑️</button>
-        </div>
-      `;
-    });
-  }
-
-  function openEditPeriodModal() {
-    document.getElementById('edit-period-start').value = activePeriod?.startDate || getTodayStr();
-    document.getElementById('edit-period-end').value = activePeriod?.endDate || getTodayStr();
-
-    const container = document.getElementById('period-plans-inputs-container');
-    container.innerHTML = '';
-    Object.keys(metricLabels).forEach(key => {
-      container.innerHTML += `<div class="input-group"><label>${metricLabels[key]}</label><input type="number" id="edit-plan-${key}" value="${activePeriod?.plans[key] || 0}"></div>`;
-    });
-    document.getElementById('modal-edit-period').style.display = 'flex';
-  }
-
-  async function savePeriodAndPlans() {
-    const start = document.getElementById('edit-period-start').value;
-    const end = document.getElementById('edit-period-end').value;
-
-    let plansObj = {};
-    Object.keys(metricLabels).forEach(key => {
-      plansObj[key] = parseFloat(document.getElementById(`edit-plan-${key}`).value) || 0;
-    });
-
-    await _supabase.from('active_periods').update({ is_active: false }).neq('id', '00000000-0000-0000-0000-000000000000');
-    await _supabase.from('active_periods').insert([{ start_date: start, end_date: end, plans: plansObj, is_active: true }]);
-
-    closeModal('modal-edit-period');
+    await _supabase.from('user_task_progress').upsert({ user_id: currentUser.tab_number, task_id: taskId, current_val: currentVal, completed: currentVal >= target });
     await loadDataFromSupabase();
   }
 
